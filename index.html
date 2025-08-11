@@ -359,7 +359,7 @@ function tidyLayout(){
 let WORDS = [];
 async function loadWords() {
   try {
-    const r = await fetch('/words_alpha.txt');
+    const r = await fetch('./words_alpha.txt');
     const t = await r.text();
     WORDS = t.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
   } catch {
