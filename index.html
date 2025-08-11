@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IT Quickboard — Notes · Password · QR</title>
+<style>
+/* ===== THEME ===== */
+:root{
+  --bg1:#f0f4f8; --bg2:#e0e8f0; --card:#ffffff; --text:#1b2330; --muted:#667085; --border:#c9d1e2;
+  --good:#16a34a; --warn:#d97706; --bad:#dc2626; --acc1:#3b82f6; --acc2:#8b5cf6;
+  --shadow:0 20px 56px rgba(0,0,0,.16);
+  --r:16px;
+  --input:#ffffff; --input-focus:#dbe9ff;
+}
+html[data-theme="violet"]{ --acc1:#7c3aed; --acc2:#22d3ee; --card:#f0eaff; --border:#d0c8e8; --bg1:#e8e4ff; --bg2:#dcd6f8; --input:#e8e4ff; --input-focus:#c8bfff; }
+html[data-theme="teal"]{ --acc1:#22d3ee; --acc2:#34d399; --card:#e0f8f8; --border:#b8d8d8; --bg1:#d0f0f0; --bg2:#c0e8e8; --input:#d0f0f0; --input-focus:#a8d8d8; }
+html[data-theme="amber"]{ --acc1:#f59e0b; --acc2:#f472b6; --card:#fff8e8; --border:#e8d8b8; --bg1:#fff0d0; --bg2:#ffe8c0; --input:#fff0d0; --input-focus:#ffd8a8; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text);
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; font-size:16px;
+  background:
+    radial-gradient(1200px 700px at -10% -10%, rgba(96,165,250,.10), transparent 60%),
+    radial-gradient(1300px 800px at 110% -20%, rgba(167,139,250,.08), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+.wrap{max-width:1600px;margin:0 auto;padding:20px 22px 68px}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:28px;margin:0;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:13px}
+/* toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.select, .btn, input, select, textarea{
+  background:var(--input); color:var(--text); border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+}
+input:focus, select:focus, textarea:focus{outline:none;border-color:var(--input-focus);box-shadow:0 0 0 3px color-mix(in srgb, var(--acc1) 25%, transparent)}
+.btn{cursor:pointer;font-weight:700}
+.btn:hover{border-color:var(--input-focus);background:color-mix(in srgb, var(--input) 82%, var(--acc1))}
+.ghost{background:transparent}
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.card{grid-column:span 12;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+@media(min-width:980px){ .notes-wide{grid-column:span 8} .span-4{grid-column:span 4} .span-12{grid-column:span 12} }
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pill{border:1px solid var(--border);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.ok{background:rgba(22,163,74,.12);color:var(--good);border:1px solid rgba(22,163,74,.35)}
+.warn{background:rgba(217,119,6,.12);color:var(--warn);border:1px solid rgba(217,119,6,.35)}
+.bad{background:rgba(220,38,38,.12);color:var(--bad);border:1px solid rgba(220,38,38,.35)}
+.divider{height:1px;background:var(--border);margin:12px 0 14px}
+.titlebar{display:flex;justify-content:space-between;align-items:center}
+.titlebar strong{font-size:18px}
+/* Sticky notes */
+.board{position:relative;min-height:720px;border:1px dashed color-mix(in srgb, var(--border) 80%, transparent); border-radius:12px; padding:12px; overflow:auto}
+.sticky{position:absolute;width:440px;min-height:300px;background:#fffbd1;color:#111;border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.5);transform:rotate(var(--rot,-1.2deg))}
+.sticky.blue{background:#d6e9ff}
+.sticky.pink{background:#ffd7ea}
+.sticky.green{background:#dbffd8}
+.sticky .bar{cursor:move;user-select:none;padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(0,0,0,.08)}
+.sticky .title{font-weight:800;font-size:15px;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sticky .body{padding:12px 12px 28px 12px;font-size:15px;line-height:1.46;outline:none}
+.sticky .btnx{background:rgba(0,0,0,.08);border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-weight:800}
+.sticky .btnx:hover{background:rgba(0,0,0,.14)}
+.sticky .resize{position:absolute;right:8px;bottom:8px;width:16px;height:16px;border-right:3px solid rgba(0,0,0,.25);border-bottom:3px solid rgba(0,0,0,.25);cursor:nwse-resize}
+/* QR */
+.qrcode{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:center}
+#qrBox{background:#fff;padding:8px;border-radius:12px;width:220px;height:220px;display:grid;place-items:center;border:1px solid var(--border);cursor:pointer}
+/* Password */
+.pw-wrap{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+#pwOut{font-size:24px;padding:10px 12px;border-width:2px;cursor:pointer}
+/* Clipboard sandbox */
+.sandbox{min-height:300px;border:1px dashed var(--border);border-radius:12px;padding:14px;background:color-mix(in srgb, var(--card) 90%, #fff)}
+.sandbox[contenteditable="true"]:empty:before{content:attr(data-placeholder); color:var(--muted)}
+.sandbox img{max-width:100%; height:auto; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.08); cursor:pointer; display:block; margin:8px 0}
+.sandbox .copyable{cursor:pointer; position:relative}
+.sandbox .copyable:hover:after{content:'Click to copy'; position:absolute; right:8px; bottom:4px; font-size:11px; color:#556; background:rgba(255,255,255,.9); border:1px solid var(--border); padding:2px 6px; border-radius:999px}
+/* Smart tokens & code */
+.token{display:inline-block; padding:4px 8px; margin:2px 4px 2px 0; border-radius:999px; border:1px solid var(--border); background:linear-gradient(180deg, var(--input), color-mix(in srgb, var(--input) 70%, #fff)); cursor:pointer; font-size:12px}
+.token:hover{border-color:var(--input-focus)}
+.codeblock{position:relative; border:1px solid var(--border); background:#fafbff; border-radius:12px; padding:12px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre-wrap; overflow:auto; margin:8px 0}
+.codeblock .btncopy{position:absolute; top:8px; right:8px}
+/* OCR */
+.ocrbox{border:1px dashed var(--border); background:#fff; border-radius:10px; padding:8px; margin:6px 0}
+.ocrbox .hdr{display:flex; gap:8px; align-items:center; margin-bottom:6px}
+.ocrbox .txt{font-size:13px; color:var(--muted)}
+/* Memory badge */
+#mem{display:flex;align-items:center;gap:8px}
+#mem .thumb{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);object-fit:cover}
+#mem .label{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* tiny utilities */
+.accent{color:var(--acc1)}
+.clock{font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>IT Quickboard</h1>
+      <div class="sub">Sticky notes, quick tools & a paste-anywhere sandbox — now with Smart Paste, OCR, and Snap-to-grid.</div>
+    </div>
+    <div class="toolbar">
+      <span class="pill clock" id="clock">--:--</span>
+      <div id="mem" class="pill" title="App clipboard">
+        <img id="memThumb" class="thumb" style="display:none"/>
+        <span class="label" id="memLabel">Empty</span>
+        <button class="btn" id="memPaste">Paste</button>
+        <button class="btn" id="memClear">Clear</button>
+      </div>
+      <select class="select" id="themePick" title="Theme">
+        <option value="default">Bright Slate</option>
+        <option value="violet">Violet Pulse</option>
+        <option value="teal">Teal Drift</option>
+        <option value="amber">Amber Glow</option>
+      </select>
+      <button class="btn ghost" id="resetLayout" title="Reset layout">Reset layout</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Sticky Notes (wider left) -->
+    <section class="card notes-wide">
+      <div class="titlebar">
+        <strong>Notes <span class="hint">(press <span class="mono">N</span> to add)</span></strong>
+        <div class="row">
+          <button class="btn" id="newSticky">New</button>
+          <select id="stickyColor" style="max-width:140px">
+            <option value="yellow">Yellow</option>
+            <option value="blue">Blue</option>
+            <option value="pink">Pink</option>
+            <option value="green">Green</option>
+          </select>
+          <label class="pill"><input type="checkbox" id="snapToggle"> Snap</label>
+          <button class="btn" id="tidyNotes" title="Reflow into neat columns">Tidy</button>
+          <button class="btn" id="clearStickies">Clear</button>
+          <span class="pill" id="stickyCount">0</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div id="board" class="board"></div>
+    </section>
+
+    <!-- Password & QR Column (right) -->
+    <section class="card span-4">
+      <div class="titlebar"><strong>Password & QR</strong></div>
+      <!-- Password Subsection (larger + click-to-copy) -->
+      <div class="pw-wrap" style="margin-top:6px">
+        <input id="pwOut" class="mono" type="text" readonly placeholder="Word34$" title="Click to copy" />
+        <div class="row">
+          <button class="btn" id="pwGen" title="New password">New</button>
+          <button class="btn" id="pwCopy" title="Copy password">Copy</button>
+          <button class="btn" id="pwSend" title="Insert into sandbox">→ Sandbox</button>
+          <span id="pwEntropy" class="badge warn">—</span>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:6px">Default pattern: <span class="mono">Word</span> + <span class="mono">2 digits</span> + <span class="mono">symbol</span>. Click the password to copy.</div>
+      <div class="divider"></div>
+      <!-- QR Subsection (bigger + click-to-copy) -->
+      <div class="row" style="margin-top:8px"><input id="qrText" type="text" placeholder="Text or URL" title="Type and Generate"/></div>
+      <div class="row">
+        <button class="btn" id="qrMake">Generate</button>
+        <button class="btn" id="qrCopy">Copy</button>
+        <button class="btn" id="qrSend" title="Insert into sandbox">→ Sandbox</button>
+        <button class="btn" id="qrSave">Save</button>
+        <button class="btn" id="qrClear">Clear</button>
+      </div>
+      <div class="qrcode" style="margin-top:10px">
+        <div id="qrBox" title="Click to copy the QR image"></div>
+        <input id="qrPreview" class="mono" type="text" readonly placeholder="preview" title="Click to copy"/>
+      </div>
+      <div class="hint" style="margin-top:6px">Tip: Click QR or preview to copy. Double‑click in the sandbox to paste the last copied item.</div>
+    </section>
+
+    <!-- Clipboard Sandbox -->
+    <section class="card span-12">
+      <div class="titlebar">
+        <strong>Clipboard Sandbox</strong>
+        <div class="row">
+          <label class="pill"><input type="checkbox" id="smartPaste" checked> Smart paste</label>
+          <label class="pill"><input type="checkbox" id="autoOCR" checked> Auto OCR images</label>
+          <button class="btn" id="runOCRLast" title="Run OCR on the most recent image">OCR last image</button>
+          <button class="btn" id="clipCopyAll" title="Copy sandbox as text & HTML">Copy All</button>
+          <button class="btn" id="clipClean" title="Strip formatting, keep text">Clean</button>
+          <button class="btn" id="clipClearAll">Clear</button>
+        </div>
+      </div>
+      <div id="sandbox" class="sandbox" contenteditable="true" data-placeholder="Paste or drop anything here — text, screenshots, mixed. Smart paste will autolink URLs, UNC paths, IPs and error codes. Click chips or blocks to copy. Double‑click on empty areas to paste the last copied."></div>
+      <div class="hint" style="margin-top:6px">Paste anywhere on the page — it routes into the sandbox automatically. Selecting text will never trigger copy/paste.</div>
+    </section>
+  </div>
+</div>
+
+<!-- libs -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js"></script>
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const toast=(m)=>{const t=document.createElement('div'); t.textContent=m; t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#ffffff;border:1px solid var(--border);padding:8px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:999;color:var(--text)'; document.body.appendChild(t); setTimeout(()=>t.remove(),1200)}
+const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+/* ===== Theme + clock + layout ===== */
+const themePick=$('#themePick');
+const savedTheme=localStorage.getItem('itq_theme')||'default';
+if(savedTheme!=='default') document.documentElement.setAttribute('data-theme', savedTheme);
+  themePick.value=savedTheme;
+  themePick.addEventListener('change',()=>{ const v=themePick.value; if(v==='default') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', v); localStorage.setItem('itq_theme', v); });
+const clockEl=$('#clock');
+const tick=()=>{ const d=new Date(); const pad=n=>String(n).padStart(2,'0'); clockEl.textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+setInterval(tick,1000); tick();
+$('#resetLayout').addEventListener('click',()=>{
+  if(!confirm('Reset notes layout and clear sandbox?')) return;
+  localStorage.removeItem('stickies');
+  stickies={}; renderStickies();
+  $('#sandbox').innerHTML=''; updateMem(null); toast('Layout reset');
+});
+
+/* ===== App clipboard (memory) ===== */
+let APP_MEM = null; // {type:'text'|'image', data:string(dataURL or text)}
+function updateMem(obj){ APP_MEM = obj; const lab=$('#memLabel'), th=$('#memThumb'); if(!obj){ lab.textContent='Empty'; th.style.display='none'; return; } if(obj.type==='text'){ lab.textContent = obj.data.length>32? obj.data.slice(0,32)+'…' : obj.data; th.style.display='none'; } else { lab.textContent='Image'; th.src=obj.data; th.style.display='inline-block'; } }
+$('#memPaste').addEventListener('click',()=> pasteFromMemory());
+$('#memClear').addEventListener('click',()=> updateMem(null));
+
+async function copyText(txt){ try{ await navigator.clipboard.writeText(txt); updateMem({type:'text', data:txt}); toast('Copied text'); }catch{ updateMem({type:'text', data:txt}); toast('Saved to app clipboard'); } }
+async function copyImageFromDataURL(url){ try{ const b = await (await fetch(url)).blob(); await navigator.clipboard.write([new ClipboardItem({[b.type||'image/png']: b})]); updateMem({type:'image', data:url}); toast('Copied image'); }catch{ updateMem({type:'image', data:url}); toast('Saved image to app clipboard'); } }
+
+/* ===== Sticky Notes ===== */
+const board = $('#board');
+let stickies = JSON.parse(localStorage.getItem('stickies') || '{}');
+const randRot = () => (Math.random() * 2 - 1.2).toFixed(2) + "deg";
+const SNAP_KEY='itq_snap';
+const snapToggle=$('#snapToggle');
+const savedSnap = localStorage.getItem(SNAP_KEY)==='1';
+snapToggle.checked = savedSnap;
+function applySnap(x){ localStorage.setItem(SNAP_KEY, x? '1':'0'); }
+
+function renderStickies() {
+  board.innerHTML = '';
+  const items = Object.values(stickies).sort((a, b) => a.z - b.z);
+  items.forEach(addStickyEl);
+  $('#stickyCount').textContent = items.length;
+}
+function addStickyEl(n) {
+  const el = document.createElement('div');
+  el.className = 'sticky ' + (n.color || 'yellow');
+  el.style.left = (n.x || 16) + 'px';
+  el.style.top = (n.y || 16) + 'px';
+  el.style.width = (n.w || 440) + 'px';
+  el.style.height = (n.h || 300) + 'px';
+  el.style.setProperty('--rot', n.rot || '-1.2deg');
+  el.dataset.id = n.id;
+  el.innerHTML = `
+    <div class="bar">
+      <div class="title" contenteditable="true">${esc(n.title || 'Note')}</div>
+      <div class="row" style="gap:6px">
+        <button class="btnx" data-a="copy">Copy</button>
+        <button class="btnx" data-a="del">✕</button>
+      </div>
+    </div>
+    <div class="body" contenteditable="true">${esc(n.body || '')}</div>
+    <div class="resize"></div>
+  `;
+  board.appendChild(el);
+  const bar = el.querySelector('.bar'); let ox, oy, sx, sy;
+  // Drag
+  bar.addEventListener('mousedown', e => {
+    if (e.target.closest('.btnx')) return;
+    ox = e.clientX; oy = e.clientY; sx = parseInt(el.style.left); sy = parseInt(el.style.top);
+    const mm = ev => { el.style.left = (sx + ev.clientX - ox) + "px"; el.style.top = (sy + ev.clientY - oy) + "px"; };
+    const up = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', up); if(snapToggle.checked){ snapElement(el); } savePos(el); };
+    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', up);
+  });
+  // Resize
+  const rs = el.querySelector('.resize'); let rw, rh;
+  rs.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    ox = e.clientX; oy = e.clientY; rw = parseInt(el.style.width); rh = parseInt(el.style.height);
+    const mm = ev => { el.style.width = (rw + ev.clientX - ox) + "px"; el.style.height = (rh + ev.clientY - oy) + "px"; };
+    const up = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', up); savePos(el); };
+    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', up);
+  });
+  // Save edits
+  const title = el.querySelector('.title'); const body = el.querySelector('.body'); let tmr;
+  const save = () => {
+    n.title = title.textContent.trim();
+    n.body = body.textContent;
+    n.updated = Date.now();
+    stickies[n.id] = n;
+    localStorage.setItem('stickies', JSON.stringify(stickies));
+  };
+  ['input', 'blur', 'keyup'].forEach(ev => {
+    title.addEventListener(ev, () => { clearTimeout(tmr); tmr = setTimeout(save, 250); });
+    body.addEventListener(ev, () => { clearTimeout(tmr); tmr = setTimeout(save, 250); });
+  });
+  // Delete
+  el.querySelector('[data-a="del"]').addEventListener('click', () => {
+    delete stickies[n.id];
+    localStorage.setItem('stickies', JSON.stringify(stickies));
+    el.remove(); renderStickies();
+  });
+  // Copy (title+body to text clipboard + app mem)
+  el.querySelector('[data-a="copy"]').addEventListener('click', () => {
+    copyText(((n.title? n.title+"\n" : "") + (n.body||''))); 
+  });
+  return el;
+}
+function snapElement(el){ const grid=16; el.style.left = (Math.round(parseInt(el.style.left)/grid)*grid)+"px"; el.style.top=(Math.round(parseInt(el.style.top)/grid)*grid)+"px"; }
+function savePos(el) {
+  const id = el.dataset.id; const n = stickies[id];
+  n.x = parseInt(el.style.left); n.y = parseInt(el.style.top);
+  n.w = parseInt(el.style.width); n.h = parseInt(el.style.height);
+  n.rot = n.rot || randRot(); n.z = Date.now() % 1e9; n.updated = Date.now();
+  stickies[id] = n; localStorage.setItem('stickies', JSON.stringify(stickies));
+}
+function placeCaret(el, toEnd=true){ const r=document.createRange(); r.selectNodeContents(el); if(toEnd){ r.collapse(false);} else { r.collapse(true);} const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+function newSticky() {
+  const color = $('#stickyColor').value;
+  const id = crypto.randomUUID();
+  const n = { id, title:'', body:'', x:16 + Math.random()*50, y:16 + Math.random()*40, w:440, h:300, color, rot:randRot(), z:Date.now()%1e9, created:Date.now(), updated:Date.now() };
+  stickies[id] = n; localStorage.setItem('stickies', JSON.stringify(stickies));
+  const el = addStickyEl(n);
+  $('#stickyCount').textContent = Object.keys(stickies).length;
+  const body = el.querySelector('.body'); body.focus(); placeCaret(body, false); // caret at start for immediate typing
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+$('#newSticky').addEventListener('click', newSticky);
+$('#clearStickies').addEventListener('click', () => {
+  if (confirm('Clear all notes?')) { stickies = {}; localStorage.setItem('stickies', JSON.stringify(stickies)); renderStickies(); }
+});
+$('#tidyNotes').addEventListener('click', ()=>{ tidyLayout(); });
+snapToggle.addEventListener('change',()=> applySnap(snapToggle.checked));
+renderStickies();
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'n' && !e.target.matches('input,textarea,[contenteditable="true"]')) {
+    e.preventDefault(); newSticky();
+  }
+});
+function tidyLayout(){
+  const gap=16, colWidth=460; // sticky 440 + gap
+  const cols = Math.max(1, Math.floor((board.clientWidth - gap) / colWidth));
+  const colY = new Array(cols).fill(gap);
+  const items = Object.values(stickies).sort((a,b)=> (a.updated||a.created) - (b.updated||b.created));
+  items.forEach(n=>{
+    const col = colY.indexOf(Math.min(...colY));
+    n.w = 440; // normalize width for neat columns
+    n.x = gap + col * colWidth;
+    n.y = colY[col];
+    n.rot = '0deg';
+    colY[col] += (n.h||300) + gap;
+    n.z = Date.now()%1e9;
+  });
+  localStorage.setItem('stickies', JSON.stringify(stickies));
+  renderStickies();
+}
+
+/* ===== Passwords (simplified, bigger, click-to-copy) ===== */
+let WORDS = [];
+async function loadWords() {
+  try {
+    const r = await fetch('/words_alpha.txt');
+    const t = await r.text();
+    WORDS = t.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
+  } catch {
+    WORDS = ['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india','juliet'];
+  }
+  generatePassword();
+}
+function rand(max) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % max; }
+function choose() { return WORDS[rand(WORDS.length)] || 'password'; }
+function entropyEstimate() {
+  const base = Math.log2(Math.max(1, WORDS.length));
+  const symCount = '!@#$%^&*-_+?'.length;
+  return Math.round(base + Math.log2(10**2) + Math.log2(symCount));
+}
+function generatePassword() {
+  const wRaw = choose();
+  const w = wRaw[0]?.toUpperCase() + wRaw.slice(1);
+  const num = String(rand(100)).padStart(2,'0');
+  const sy = '!@#$%^&*-_+?';
+  const sym = sy[rand(sy.length)] || '';
+  const out = `${w}${num}${sym}`;
+  $('#pwOut').value = out;
+  const bits = entropyEstimate();
+  const b = $('#pwEntropy'); b.textContent = `${bits} bits`; b.className = 'badge ' + (bits >= 60 ? 'ok' : bits >= 45 ? 'warn' : 'bad');
+}
+$('#pwGen').addEventListener('click', generatePassword);
+$('#pwCopy').addEventListener('click', () => copyText($('#pwOut').value || ''));
+$('#pwOut').addEventListener('click', () => copyText($('#pwOut').value || ''));
+$('#pwSend').addEventListener('click', ()=>{ const v=$('#pwOut').value; if(!v) return; focusSandboxEnd(); document.execCommand('insertText', false, v+'\n'); updateMem({type:'text', data:v}); });
+loadWords();
+
+/* ===== QR (bigger + click-to-copy) ===== */
+let qr; function ensureQR(){ if(!qr){ qr=new QRCode('qrBox',{ text:'', width:220, height:220}); } }
+function getQRElement(){ return $('#qrBox').querySelector('canvas,img'); }
+$('#qrMake').addEventListener('click',()=>{ ensureQR(); const t=$('#qrText').value||' '; qr.makeCode(t); $('#qrPreview').value=t; });
+$('#qrCopy').addEventListener('click',()=>{ const el=getQRElement(); if(!el) return; if(el.nodeName==='CANVAS'){ el.toBlob(async b=>{ try{ await navigator.clipboard.write([new ClipboardItem({'image/png':b})]); updateMem({type:'image', data:el.toDataURL('image/png')}); toast('QR copied'); }catch{ updateMem({type:'image', data:el.toDataURL('image/png')}); toast('Saved to app clipboard'); } }); } else { // img
+  const cv=document.createElement('canvas'); cv.width=el.naturalWidth||220; cv.height=el.naturalHeight||220; const ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height); ctx.drawImage(el,0,0); const url=cv.toDataURL('image/png'); copyImageFromDataURL(url);
+} });
+$('#qrBox').addEventListener('click',()=>{ const el=getQRElement(); if(!el) return; if(el.nodeName==='CANVAS'){ copyImageFromDataURL(el.toDataURL('image/png')); } else { copyImageFromDataURL(el.src); } });
+$('#qrPreview').addEventListener('click',()=>{ const v=$('#qrPreview').value; if(v) copyText(v); });
+$('#qrSave').addEventListener('click',()=>{ ensureQR(); const el=getQRElement(); let url;
+  if(el&&el.nodeName==='CANVAS'){ url=el.toDataURL('image/png'); }
+  else if(el){ const cv=document.createElement('canvas'); cv.width=el.naturalWidth||220; cv.height=el.naturalHeight||220; const ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height); ctx.drawImage(el,0,0); url=cv.toDataURL('image/png'); }
+  else return; const a=document.createElement('a'); a.href=url; a.download='qr.png'; a.click(); });
+$('#qrClear').addEventListener('click',()=>{ $('#qrPreview').value=''; $('#qrText').value=''; $('#qrBox').innerHTML=''; });
+$('#qrSend').addEventListener('click',()=>{ const el=getQRElement(); if(!el) return; let url=''; if(el.nodeName==='CANVAS'){ url=el.toDataURL('image/png'); } else { url=el.src; } focusSandboxEnd(); insertImageAtCaret(url,'QR'); updateMem({type:'image', data:url}); });
+
+/* ===== SMART PASTE + OCR ===== */
+const sandbox = $('#sandbox');
+const smartPaste = $('#smartPaste');
+const autoOCR = $('#autoOCR');
+let lastImageNode = null;
+
+function focusSandboxEnd(){ sandbox.focus(); const r=document.createRange(); r.selectNodeContents(sandbox); r.collapse(false); const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+function setCaretFromPoint(e){ const sel=window.getSelection(); let range=null; if(document.caretRangeFromPoint){ range=document.caretRangeFromPoint(e.clientX,e.clientY); } else if(document.caretPositionFromPoint){ const pos=document.caretPositionFromPoint(e.clientX,e.clientY); if(pos){ range=document.createRange(); range.setStart(pos.offsetNode,pos.offset); } }
+  if(range){ sel.removeAllRanges(); sel.addRange(range); } else { focusSandboxEnd(); }
+}
+function insertImageAtCaret(url, alt='pasted'){
+  const img = new Image(); img.src=url; img.alt=alt; img.dataset.id=crypto.randomUUID();
+  const sel=window.getSelection(); if(!sel.rangeCount){ focusSandboxEnd(); }
+  const range=window.getSelection().getRangeAt(0); range.collapse(false); range.insertNode(img); range.setStartAfter(img); range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+  lastImageNode = img;
+  if(autoOCR.checked){ runOCROnImage(img); }
+}
+function insertTextAtCaret(text){ document.execCommand('insertText', false, text); }
+
+function handlePasteEvent(e){
+  const items = e.clipboardData && e.clipboardData.items ? Array.from(e.clipboardData.items) : [];
+  const hasImage = items.some(it=> it.type && it.type.startsWith('image/'));
+  if(hasImage){ e.preventDefault(); items.forEach(it=>{ if(it.type.startsWith('image/')){ const f=it.getAsFile?.(); if(f){ const fr=new FileReader(); fr.onload=()=> insertImageAtCaret(fr.result, f.name?.replace(/\.[^.]+$/, '')||'pasted'); fr.readAsDataURL(f); } } }); return; }
+  // Text handling
+  if(!smartPaste.checked) return; // let browser default paste
+  const txt = e.clipboardData.getData('text/plain');
+  if(!txt) return;
+  e.preventDefault();
+  const frag = transformTextToRichNodes(txt);
+  const sel=window.getSelection(); if(!sel.rangeCount){ focusSandboxEnd(); }
+  const range=window.getSelection().getRangeAt(0); range.deleteContents(); range.insertNode(frag); range.collapse(false);
+}
+function handleDropEvent(e){ e.preventDefault(); const files = e.dataTransfer.files || []; for(const f of files){ if(f.type.startsWith('image/')){ const fr=new FileReader(); fr.onload=()=> insertImageAtCaret(fr.result, f.name?.replace(/\.[^.]+$/, '')||'pasted'); fr.readAsDataURL(f); } else { focusSandboxEnd(); if(smartPaste.checked){ const frag=transformTextToRichNodes(f.name); const sel=window.getSelection(); const range=sel.rangeCount? sel.getRangeAt(0):null; if(range){ range.insertNode(frag); } } else { insertTextAtCaret(f.name+'\n'); } } }
+}
+['paste'].forEach(ev=> sandbox.addEventListener(ev, handlePasteEvent));
+sandbox.addEventListener('dragover',e=> e.preventDefault());
+sandbox.addEventListener('drop', handleDropEvent);
+
+// Selection-aware click
+let isMouseDown=false, startX=0, startY=0; let isDragging=false;
+sandbox.addEventListener('mousedown', (e)=>{ isMouseDown=true; isDragging=false; startX=e.clientX; startY=e.clientY; });
+sandbox.addEventListener('mousemove', (e)=>{ if(!isMouseDown) return; if(Math.abs(e.clientX-startX)>3 || Math.abs(e.clientY-startY)>3){ isDragging=true; } });
+sandbox.addEventListener('mouseup', ()=>{ isMouseDown=false; setTimeout(()=>{ isDragging=false; },0); });
+sandbox.addEventListener('click', async (e)=>{
+  if(isDragging) return;
+  const sel = window.getSelection(); if(sel && !sel.isCollapsed) return;
+  const t = e.target;
+  if(t.classList.contains('token')){ copyText(t.dataset.val || t.textContent.trim()); return; }
+  if(t.classList.contains('btncopy')){ const pre=t.closest('.codeblock'); if(pre){ copyText(pre.innerText); } return; }
+  if(t.tagName==='IMG'){
+    const url = t.src; copyImageFromDataURL(url); return;
+  }
+  // fallback: copy nearest block text
+  const blk = t.closest('p,li,pre,code,div,span');
+  const txt = (blk? blk.innerText : sandbox.innerText).trim();
+  if(txt){ copyText(txt); }
+});
+
+// Double-click to paste from APP_MEM — only on empty area / collapsed selection
+let lastPasteAt=0;
+sandbox.addEventListener('dblclick', (e)=>{
+  const sel = window.getSelection(); if(sel && !sel.isCollapsed) return;
+  const now=Date.now(); if(now-lastPasteAt<250) return; lastPasteAt=now;
+  setCaretFromPoint(e);
+  pasteFromMemory();
+});
+
+// Global paste router — paste anywhere (outside inputs) into sandbox
+window.addEventListener('paste', (e)=>{
+  const inside = e.composedPath().includes(sandbox);
+  const inField = e.target && (e.target.matches('input,textarea') || e.target.isContentEditable);
+  if(inside || inField) return; // let normal fields handle paste
+  focusSandboxEnd(); handlePasteEvent(e);
+});
+$('#clipCopyAll').addEventListener('click', async()=>{
+  const html = sandbox.innerHTML || '';
+  const text = sandbox.innerText || '';
+  try{
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'text/html': new Blob([html], {type:'text/html'}), 'text/plain': new Blob([text], {type:'text/plain'}) })
+    ]);
+    toast('Sandbox copied');
+  }catch{ toast('Copy blocked'); }
+});
+$('#clipClean').addEventListener('click',()=>{ const text=sandbox.innerText||''; sandbox.innerHTML=''; focusSandboxEnd(); insertTextAtCaret(text); });
+$('#clipClearAll').addEventListener('click',()=>{ sandbox.innerHTML=''; });
+$('#runOCRLast').addEventListener('click',()=>{ if(lastImageNode) runOCROnImage(lastImageNode); else toast('No image yet'); });
+
+function pasteFromMemory(){ if(!APP_MEM){ toast('Clipboard empty'); return; } if(APP_MEM.type==='text'){ insertTextAtCaret(APP_MEM.data); } else if(APP_MEM.type==='image'){ insertImageAtCaret(APP_MEM.data); } }
+
+/* ===== Smart text transform ===== */
+const urlRe = /https?:\/\/[^\s<>"']+/g;
+const uncRe = /\\\\[A-Za-z0-9._$-]+\\[^\s\\:*?"<>|]+(?:\\[^\s\\:*?"<>|]+)*/g;
+const ipRe = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g;
+const errHex = /\b0x[0-9a-fA-F]+\b/g;
+
+function isCodeLine(line){
+  if(/^\s{2,}/.test(line)) return true;
+  if(/[\t]/.test(line)) return true;
+  if(/^[A-Za-z0-9_.-]+\s{2,}\S+/.test(line)) return true; // table-ish
+  if(/^(PS [A-Z]:|C:\\|\\\\|\[|\{)/.test(line)) return true;
+  if(line.length>100) return true;
+  return false;
+}
+function linkifyInto(container, text){
+  let idx=0; const master = new RegExp(`${urlRe.source}|${uncRe.source}|${ipRe.source}|${errHex.source}`,'g');
+  let m;
+  while((m = master.exec(text))){
+    if(m.index>idx) container.appendChild(document.createTextNode(text.slice(idx,m.index)));
+    const token = m[0];
+    const span = document.createElement( token.startsWith('http') ? 'a' : 'span');
+    span.className='token';
+    span.textContent=token;
+    span.dataset.val=token;
+    if(span.tagName==='A'){ span.href=token; span.target='_blank'; span.rel='noreferrer'; }
+    container.appendChild(span);
+    idx = m.index + token.length;
+  }
+  if(idx<text.length) container.appendChild(document.createTextNode(text.slice(idx)));
+}
+function transformTextToRichNodes(text){
+  const frag = document.createDocumentFragment();
+  const lines = text.replace(/\r\n?/g,'\n').split('\n');
+  let bucket=[];
+  function flushCode(){ if(!bucket.length) return; const pre=document.createElement('pre'); pre.className='codeblock'; pre.innerText=bucket.join('\n'); const btn=document.createElement('button'); btn.className='btn btncopy'; btn.textContent='Copy'; pre.appendChild(btn); frag.appendChild(pre); bucket=[]; }
+  for(const raw of lines){ const line=raw; if(isCodeLine(line)){ bucket.push(line); continue; } flushCode(); const p=document.createElement('p'); linkifyInto(p, line); frag.appendChild(p); }
+  flushCode();
+  return frag;
+}
+
+/* ===== OCR ===== */
+async function runOCROnImage(img){
+  if(!(window.Tesseract && Tesseract.recognize)){ toast('OCR engine unavailable'); return; }
+  const box = document.createElement('div'); box.className='ocrbox'; box.innerHTML=`<div class="hdr"><strong>OCR</strong><span class="txt">Reading…</span><button class="btn" data-copy>Copy text</button></div><div class="out mono"></div><div class="chips"></div>`;
+  img.insertAdjacentElement('afterend', box);
+  try{
+    const res = await Tesseract.recognize(img, 'eng');
+    const text = (res && res.data && res.data.text) ? res.data.text.trim() : '';
+    box.querySelector('.txt').textContent = text? 'Done' : 'No text found';
+    box.querySelector('.out').textContent = text;
+    // Extract error-like tokens
+    const chipWrap = box.querySelector('.chips');
+    const tokens = (text.match(errHex) || []).slice(0,12);
+    tokens.forEach(tok=>{ const s=document.createElement('span'); s.className='token'; s.textContent=tok; s.dataset.val=tok; chipWrap.appendChild(s); });
+    box.querySelector('[data-copy]').addEventListener('click',()=> copyText(text||''));
+  }catch(err){ box.querySelector('.txt').textContent='OCR failed'; console.error(err); }
+}
+
+</script>
+</body>
+</html>
