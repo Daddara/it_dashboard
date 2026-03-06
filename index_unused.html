@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IT Quickboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   ============================================================ */
+:root{
+  --bg:#0d0f14; --bg2:#13161e; --bg3:#1a1e28; --bg4:#212638;
+  --panel:#171b24; --panel2:#1e2330;
+  --text:#e8ecf4; --muted:#6b7694; --faint:#3a4060;
+  --border:#252b3b; --border2:#2f3650;
+  --acc:#00d4ff; --acc2:#7c3aed; --acc3:#10b981; --acc4:#f59e0b; --acc5:#f43f5e;
+  --acc-glow:rgba(0,212,255,.18); --acc2-glow:rgba(124,58,237,.18);
+  --r:10px; --r2:14px; --r3:18px;
+  --font-ui:'Syne', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.4);
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.7);
+}
+html[data-theme="phosphor"]{ --bg:#05100a; --bg2:#071409; --bg3:#0a1a0f; --bg4:#0e2015; --panel:#071209; --panel2:#0a180e; --text:#bfffce; --muted:#4a8a5f; --faint:#1a3025; --border:#1a3025; --border2:#1e3a2a; --acc:#39ff6a; --acc2:#00ffba; --acc3:#7fffad; --acc4:#d0ff80; --acc5:#ff6a6a; --acc-glow:rgba(57,255,106,.15); --acc2-glow:rgba(0,255,186,.12); }
+html[data-theme="ember"]{ --bg:#0f080a; --bg2:#160a0c; --bg3:#1d0d10; --bg4:#251016; --panel:#120a0c; --panel2:#190d10; --text:#f5d0d8; --muted:#7a4050; --faint:#3a1520; --border:#2a1018; --border2:#3a1520; --acc:#ff4d6d; --acc2:#ff9f1c; --acc3:#9ef01a; --acc4:#ff6b35; --acc5:#06d6a0; --acc-glow:rgba(255,77,109,.18); --acc2-glow:rgba(255,159,28,.15); }
+html[data-theme="ice"]{ --bg:#060c18; --bg2:#08101e; --bg3:#0c1628; --bg4:#101d34; --panel:#091224; --panel2:#0d1830; --text:#c8e0ff; --muted:#4a6090; --faint:#182040; --border:#1a2845; --border2:#1e3055; --acc:#4dccff; --acc2:#b57cf6; --acc3:#50e0b0; --acc4:#ffd060; --acc5:#ff6070; --acc-glow:rgba(77,204,255,.18); --acc2-glow:rgba(181,124,246,.15); }
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--font-ui); font-size:14px; line-height:1.5;
+  overflow-x:hidden;
+}
+/* Scanline overlay */
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ===== LAYOUT ===== */
+.shell{display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  background:var(--panel); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:0; height:52px;
+  position:relative; z-index:100;
+  box-shadow:0 1px 0 var(--border),0 4px 24px rgba(0,0,0,.4);
+}
+.topbar-brand{
+  display:flex; align-items:center; gap:10px; padding:0 20px;
+  border-right:1px solid var(--border); height:100%; min-width:220px;
+}
+.brand-icon{
+  width:30px; height:30px; background:linear-gradient(135deg, var(--acc), var(--acc2));
+  border-radius:8px; display:grid; place-items:center; font-size:16px; flex-shrink:0;
+  box-shadow:0 0 14px var(--acc-glow);
+}
+.brand-name{font-size:16px; font-weight:800; letter-spacing:-.3px; color:var(--text)}
+.brand-ver{font-size:10px; color:var(--muted); font-family:var(--font-mono); margin-top:-1px}
+.topbar-nav{display:flex; align-items:center; height:100%; flex:1; overflow-x:auto; gap:0; padding:0 4px}
+.tab-btn{
+  height:100%; padding:0 18px; display:flex; align-items:center; gap:7px;
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:var(--muted); cursor:pointer; font-family:var(--font-ui); font-size:13px; font-weight:600;
+  white-space:nowrap; transition:all .15s; position:relative;
+}
+.tab-btn .ti{font-size:15px}
+.tab-btn:hover{color:var(--text); background:var(--bg3)}
+.tab-btn.active{color:var(--acc); border-bottom-color:var(--acc)}
+.tab-btn .badge-dot{width:6px;height:6px;background:var(--acc3);border-radius:50%;position:absolute;top:10px;right:10px}
+.topbar-end{display:flex; align-items:center; gap:8px; padding:0 14px; border-left:1px solid var(--border); height:100%; flex-shrink:0}
+.sys-clock{font-family:var(--font-mono);font-size:14px;color:var(--acc);letter-spacing:1px;min-width:78px;text-align:right}
+.sys-date{font-size:11px;color:var(--muted);text-align:right;margin-top:2px;font-family:var(--font-mono)}
+.theme-sel{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:5px 8px;color:var(--text);font-family:var(--font-ui);font-size:12px;cursor:pointer}
+.icon-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);width:32px;height:32px;display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:15px;transition:all .15s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg4)}
+
+/* ===== MAIN CONTENT ===== */
+.main-content{overflow-y:auto; background:var(--bg)}
+.tab-pane{display:none; padding:20px; animation:fadeIn .18s ease}
+.tab-pane.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ===== GRID ===== */
+.g{display:grid; gap:16px}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-2{grid-template-columns:1fr 1fr}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.g-12{grid-template-columns:repeat(12,1fr)}
+.g-span-2{grid-column:span 2}
+.g-span-3{grid-column:span 3}
+.g-span-4{grid-column:span 4}
+.g-span-6{grid-column:span 6}
+.g-span-8{grid-column:span 8}
+.g-span-12{grid-column:span 12}
+@media(max-width:1100px){.g-3,.g-4{grid-template-columns:1fr 1fr}.g-span-3,.g-span-4,.g-span-8{grid-column:span 2}}
+@media(max-width:720px){.g-3,.g-4,.g-2{grid-template-columns:1fr}.g-span-2,.g-span-3,.g-span-4,.g-span-6,.g-span-8{grid-column:span 1}}
+
+/* ===== PANEL ===== */
+.panel{
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--r2); padding:16px;
+  box-shadow:var(--shadow-sm);
+}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+.panel-hd h3{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.panel-hd .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ===== INPUT / CONTROLS ===== */
+input,select,textarea{
+  background:var(--bg3); color:var(--text); border:1px solid var(--border2);
+  border-radius:var(--r); padding:8px 12px; font-family:var(--font-ui); font-size:13px;
+  transition:border-color .15s, box-shadow .15s; width:100%;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none; border-color:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-glow);
+}
+.mono-input{font-family:var(--font-mono)!important}
+
+/* ===== BUTTONS ===== */
+.btn{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--bg4); border:1px solid var(--border2); border-radius:var(--r);
+  padding:7px 12px; color:var(--text); font-family:var(--font-ui); font-weight:600;
+  font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.btn:hover{background:var(--panel2);border-color:var(--acc);color:var(--acc);box-shadow:0 0 8px var(--acc-glow)}
+.btn-acc{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#000;font-weight:700}
+.btn-acc:hover{opacity:.85;color:#000;box-shadow:0 0 16px var(--acc-glow)}
+.btn-sm{padding:5px 9px;font-size:11px;border-radius:8px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.btn-danger:hover{border-color:var(--acc5);color:var(--acc5);box-shadow:0 0 8px rgba(244,63,94,.15)}
+
+/* ===== BADGES / CHIPS ===== */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--font-mono)}
+.badge-ok{background:rgba(16,185,129,.12);color:var(--acc3);border:1px solid rgba(16,185,129,.3)}
+.badge-warn{background:rgba(245,158,11,.12);color:var(--acc4);border:1px solid rgba(245,158,11,.3)}
+.badge-bad{background:rgba(244,63,94,.12);color:var(--acc5);border:1px solid rgba(244,63,94,.3)}
+.badge-info{background:rgba(0,212,255,.1);color:var(--acc);border:1px solid rgba(0,212,255,.25)}
+.badge-neu{background:var(--bg4);color:var(--muted);border:1px solid var(--border2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);font-size:11px;font-family:var(--font-mono);cursor:pointer;transition:all .12s}
+.chip:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ===== DIVIDER ===== */
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* ===== LABEL ===== */
+.label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+
+/* ===== TABS (in-panel) ===== */
+.inner-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:12px;padding-bottom:0}
+.inner-tab{padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s}
+.inner-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.inner-tab:hover:not(.active){color:var(--text)}
+.inner-pane{display:none}
+.inner-pane.active{display:block}
+
+/* ===== TOAST ===== */
+#toast-rack{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column-reverse;gap:8px;z-index:9999;pointer-events:none}
+.toast{
+  background:var(--panel2); border:1px solid var(--border2); border-radius:var(--r);
+  padding:10px 14px; font-size:13px; font-weight:600;
+  box-shadow:var(--shadow); animation:slideIn .2s ease; pointer-events:all;
+  display:flex; align-items:center; gap:8px; max-width:320px;
+}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slideOut{to{transform:translateX(20px);opacity:0}}
+.toast-icon{font-size:16px}
+
+/* ===== OUTPUT / RESULT BOXES ===== */
+.result-box{
+  background:var(--bg3); border:1px solid var(--border); border-radius:var(--r);
+  padding:10px 12px; font-family:var(--font-mono); font-size:12px; line-height:1.6;
+  min-height:48px; overflow-x:auto; white-space:pre-wrap; word-break:break-all;
+}
+.result-box.big{font-size:22px;font-weight:700;letter-spacing:.5px;color:var(--acc);min-height:52px}
+
+/* ==================================================================
+   NOTES BOARD
+================================================================== */
+#board{
+  position:relative; min-height:600px; border:1px dashed var(--faint);
+  border-radius:var(--r2); background:var(--bg2); overflow:hidden;
+  background-image:radial-gradient(circle, var(--faint) 1px, transparent 1px);
+  background-size:24px 24px;
+}
+.sticky{
+  position:absolute; width:320px; min-height:200px;
+  border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.6);
+  transform:rotate(var(--rot,-.8deg)); transition:box-shadow .15s, transform .1s;
+  display:flex; flex-direction:column;
+}
+.sticky:hover{box-shadow:0 14px 48px rgba(0,0,0,.8); z-index:50!important}
+.sticky.yellow{background:#2a2500; border:1px solid #5a4f00; color:#ffe066}
+.sticky.blue{background:#001830; border:1px solid #003070; color:#80cfff}
+.sticky.pink{background:#280018; border:1px solid #600040; color:#ffb0d8}
+.sticky.green{background:#062012; border:1px solid #105030; color:#80ffb0}
+.sticky.purple{background:#1a0828; border:1px solid #4a1860; color:#d0a0ff}
+.sticky .s-bar{cursor:move;user-select:none;padding:8px 10px;display:flex;gap:6px;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);border-radius:12px 12px 0 0;background:rgba(0,0,0,.2)}
+.sticky .s-title{font-size:13px;font-weight:700;flex:1;outline:none;background:transparent;border:none;color:inherit;font-family:var(--font-ui);padding:0}
+.sticky .s-title:focus{outline:none}
+.sticky .s-body{flex:1;padding:10px;font-size:13px;outline:none;line-height:1.5;color:inherit;resize:none;background:transparent;border:none;font-family:var(--font-ui);min-height:130px}
+.sticky .s-body:focus{outline:none}
+.sticky .s-foot{padding:4px 8px 6px;display:flex;gap:4px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.06)}
+.sticky .s-btn{background:rgba(255,255,255,.08);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:700;color:inherit;font-family:var(--font-ui)}
+.sticky .s-btn:hover{background:rgba(255,255,255,.16)}
+.sticky .s-resize{position:absolute;right:5px;bottom:5px;width:14px;height:14px;border-right:2px solid rgba(255,255,255,.2);border-bottom:2px solid rgba(255,255,255,.2);cursor:nwse-resize}
+
+/* ==================================================================
+   PASSWORD TOOL
+================================================================== */
+.pw-display{
+  background:var(--bg2); border:1px solid var(--border); border-radius:var(--r2);
+  padding:14px 16px; font-family:var(--font-mono); font-size:26px; font-weight:700;
+  letter-spacing:.5px; color:var(--acc); cursor:pointer; transition:all .15s;
+  text-align:center; word-break:break-all; min-height:60px; display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.pw-display:hover{border-color:var(--acc);box-shadow:0 0 20px var(--acc-glow)}
+.pw-display .pw-copy-hint{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted);letter-spacing:.5px;font-weight:400}
+.pw-strength-bar{height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;margin-top:6px}
+.pw-strength-fill{height:100%;border-radius:2px;transition:width .4s, background .4s}
+.pw-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.checkbox-row{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px}
+.checkbox-row input[type=checkbox]{accent-color:var(--acc);width:14px;height:14px;cursor:pointer}
+
+/* ==================================================================
+   QR
+================================================================== */
+#qrBox{
+  background:#fff; padding:8px; border-radius:10px;
+  width:180px; height:180px; display:grid; place-items:center;
+  cursor:pointer; flex-shrink:0; transition:box-shadow .15s;
+}
+#qrBox:hover{box-shadow:0 0 0 3px var(--acc),0 0 20px var(--acc-glow)}
+
+/* ==================================================================
+   CLIPBOARD SANDBOX
+================================================================== */
+.sandbox{
+  min-height:280px; border:1px dashed var(--faint); border-radius:var(--r2);
+  padding:14px; background:var(--bg2); color:var(--text); font-size:13px; line-height:1.6;
+  outline:none; overflow-y:auto;
+}
+.sandbox[contenteditable="true"]:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
+.sandbox img{max-width:100%;height:auto;border-radius:8px;box-shadow:var(--shadow);cursor:pointer;display:block;margin:6px 0}
+.sb-token{
+  display:inline-block; padding:2px 8px; margin:2px 3px 2px 0;
+  border-radius:6px; border:1px solid var(--border2); background:var(--bg3);
+  cursor:pointer; font-size:12px; font-family:var(--font-mono); color:var(--acc);
+  transition:all .12s;
+}
+.sb-token:hover{border-color:var(--acc);background:var(--bg4)}
+.sb-codeblock{
+  background:var(--bg3); border:1px solid var(--border); border-radius:var(--r);
+  padding:10px 12px 10px; font-family:var(--font-mono); white-space:pre-wrap;
+  overflow-x:auto; font-size:12px; margin:6px 0; position:relative;
+}
+.sb-codeblock .sb-copy-btn{position:absolute;top:6px;right:6px}
+.ocrbox{border:1px solid var(--border);background:var(--bg3);border-radius:var(--r);padding:10px;margin:6px 0}
+.ocrbox .ocr-hdr{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.ocrbox .ocr-txt{font-size:12px;color:var(--muted)}
+
+/* ==================================================================
+   IP / NETWORK TOOLS
+================================================================== */
+.net-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow:hidden}
+.net-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.net-row:last-child{border-bottom:none}
+.net-key{color:var(--muted);width:130px;flex-shrink:0;font-weight:600}
+.net-val{font-family:var(--font-mono);color:var(--text);word-break:break-all;cursor:pointer}
+.net-val:hover{color:var(--acc)}
+.subnet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:8px}
+.subnet-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px}
+.subnet-card .sn-head{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--acc);margin-bottom:6px}
+.subnet-card .sn-row{display:flex;justify-content:space-between;font-size:11px;margin:2px 0}
+.subnet-card .sn-k{color:var(--muted)}
+.subnet-card .sn-v{font-family:var(--font-mono);cursor:pointer}
+.subnet-card .sn-v:hover{color:var(--acc)}
+.ping-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.ping-row:last-child{border-bottom:none}
+.ping-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ==================================================================
+   PORT SCANNER / LOOKUP
+================================================================== */
+.port-table{width:100%;border-collapse:collapse;font-size:12px}
+.port-table th{text-align:left;padding:6px 10px;background:var(--bg3);color:var(--muted);font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.6px;border-bottom:1px solid var(--border)}
+.port-table td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+.port-table tr:hover td{background:var(--bg3)}
+.port-table tr:last-child td{border-bottom:none}
+.port-status-open{color:var(--acc3)}
+.port-status-closed{color:var(--acc5)}
+.port-status-filter{color:var(--acc4)}
+
+/* ==================================================================
+   DNS LOOKUP
+================================================================== */
+.dns-record{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin:4px 0;font-family:var(--font-mono);font-size:12px;display:flex;gap:10px;align-items:flex-start}
+.dns-type{min-width:44px;font-weight:700;color:var(--acc)}
+.dns-val{word-break:break-all;flex:1}
+.dns-ttl{color:var(--muted);font-size:10px;margin-top:1px}
+
+/* ==================================================================
+   ENCODING TOOLS
+================================================================== */
+.encode-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.encode-cols{grid-template-columns:1fr}}
+
+/* ==================================================================
+   SYSTEM INFO / CHECKLIST
+================================================================== */
+.checklist{list-style:none}
+.checklist li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.checklist li:last-child{border-bottom:none}
+.checklist input[type=checkbox]{accent-color:var(--acc);width:15px;height:15px;cursor:pointer}
+.checklist .item-done{text-decoration:line-through;color:var(--muted)}
+
+/* ==================================================================
+   COLOR TOOLS
+================================================================== */
+.color-swatch{width:60px;height:60px;border-radius:10px;border:1px solid var(--border);cursor:pointer;flex-shrink:0;transition:transform .15s}
+.color-swatch:hover{transform:scale(1.05)}
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:8px}
+.cg-item{height:44px;border-radius:8px;cursor:pointer;display:flex;align-items:flex-end;padding:3px 5px;font-size:9px;font-weight:700;font-family:var(--font-mono);transition:transform .12s}
+.cg-item:hover{transform:scale(1.05)}
+
+/* ==================================================================
+   REGEX TESTER
+================================================================== */
+.regex-match{background:rgba(0,212,255,.18);border-radius:3px;outline:1px solid rgba(0,212,255,.4)}
+.regex-area{min-height:100px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);padding:10px;font-family:var(--font-mono);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;overflow-y:auto}
+
+/* ==================================================================
+   HASH TOOL
+================================================================== */
+.hash-row{display:grid;grid-template-columns:80px 1fr auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+.hash-row:last-child{border-bottom:none}
+.hash-alg{font-size:11px;font-weight:700;color:var(--acc2);font-family:var(--font-mono)}
+.hash-val{font-family:var(--font-mono);font-size:11px;word-break:break-all;color:var(--text)}
+
+/* ==================================================================
+   MEMORY BAR
+================================================================== */
+#mem-bar{display:flex;align-items:center;gap:6px;padding:0 12px;border-left:1px solid var(--border);height:100%;flex-shrink:0;min-width:160px;max-width:260px}
+#mem-thumb{width:20px;height:20px;border-radius:4px;object-fit:cover;border:1px solid var(--border2)}
+#mem-label{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-family:var(--font-mono)}
+
+/* ==================================================================
+   MISC UTILS
+================================================================== */
+.flex{display:flex} .flex-col{display:flex;flex-direction:column}
+.items-center{align-items:center} .justify-between{justify-content:space-between}
+.gap-2{gap:6px} .gap-3{gap:10px} .gap-4{gap:14px}
+.mt-2{margin-top:6px} .mt-3{margin-top:10px} .mt-4{margin-top:14px}
+.mb-2{margin-bottom:6px} .mb-3{margin-bottom:10px}
+.w-full{width:100%} .text-muted{color:var(--muted)} .text-acc{color:var(--acc)}
+.text-sm{font-size:12px} .text-xs{font-size:11px} .mono{font-family:var(--font-mono)}
+.bold{font-weight:700} .text-center{text-align:center}
+.overflow-x{overflow-x:auto}
+.progress-bar{height:6px;border-radius:3px;background:var(--bg4);overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ==================================================================
+   SYSTEM PULSE WIDGET
+================================================================== */
+.pulse-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.pulse-row:last-child{border-bottom:none}
+.pulse-name{font-size:12px;font-weight:600;min-width:90px;flex-shrink:0}
+.pulse-bar-wrap{flex:1}
+.pulse-value{font-family:var(--font-mono);font-size:12px;min-width:52px;text-align:right;color:var(--acc)}
+
+/* ==================================================================
+   COUNTDOWN / TIMERS
+================================================================== */
+.timer-display{font-size:40px;font-weight:800;font-family:var(--font-mono);letter-spacing:2px;text-align:center;color:var(--acc);line-height:1.1;padding:12px 0;text-shadow:0 0 24px var(--acc-glow)}
+.timer-display.warn{color:var(--acc4);text-shadow:0 0 24px rgba(245,158,11,.4)}
+.timer-display.bad{color:var(--acc5);text-shadow:0 0 24px rgba(244,63,94,.4)}
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ======================================================
+     TOP BAR
+====================================================== -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">⚡</div>
+    <div>
+      <div class="brand-name">IT Quickboard</div>
+      <div class="brand-ver">v2.0 · Pro</div>
+    </div>
+  </div>
+  <nav class="topbar-nav">
+    <button class="tab-btn active" data-tab="notes"><span class="ti">📋</span>Notes</button>
+    <button class="tab-btn" data-tab="pwqr"><span class="ti">🔑</span>Password & QR</button>
+    <button class="tab-btn" data-tab="sandbox"><span class="ti">📋</span>Sandbox</button>
+    <button class="tab-btn" data-tab="network"><span class="ti">🌐</span>Network</button>
+    <button class="tab-btn" data-tab="dns"><span class="ti">🔍</span>DNS Lookup</button>
+    <button class="tab-btn" data-tab="ports"><span class="ti">🔌</span>Ports</button>
+    <button class="tab-btn" data-tab="encode"><span class="ti">⚙️</span>Encode/Hash</button>
+    <button class="tab-btn" data-tab="regex"><span class="ti">✏️</span>Regex</button>
+    <button class="tab-btn" data-tab="color"><span class="ti">🎨</span>Color</button>
+    <button class="tab-btn" data-tab="checklist"><span class="ti">✅</span>Checklists</button>
+    <button class="tab-btn" data-tab="timers"><span class="ti">⏱</span>Timers</button>
+  </nav>
+  <div id="mem-bar" class="topbar-end" title="App clipboard">
+    <img id="mem-thumb" style="display:none"/>
+    <span id="mem-label">Empty</span>
+    <button class="btn btn-sm" id="memPaste">Paste</button>
+    <button class="btn btn-sm btn-ghost" id="memClear">×</button>
+  </div>
+  <div class="topbar-end" style="min-width:auto">
+    <select class="theme-sel" id="themePick">
+      <option value="default">Void Slate</option>
+      <option value="phosphor">Phosphor</option>
+      <option value="ember">Ember</option>
+      <option value="ice">Ice</option>
+    </select>
+    <div>
+      <div class="sys-clock" id="clock">00:00:00</div>
+      <div class="sys-date" id="date-lbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     MAIN
+====================================================== -->
+<div class="main-content">
+  <!-- ======================== NOTES ======================== -->
+  <div class="tab-pane active" id="tab-notes">
+    <div class="flex gap-3 items-center mb-3" style="flex-wrap:wrap">
+      <button class="btn" id="newSticky">+ New Note</button>
+      <select id="stickyColor" style="width:120px">
+        <option value="yellow">Yellow</option>
+        <option value="blue">Blue</option>
+        <option value="pink">Pink</option>
+        <option value="green">Green</option>
+        <option value="purple">Purple</option>
+      </select>
+      <label class="checkbox-row"><input type="checkbox" id="snapToggle"> Snap to grid</label>
+      <button class="btn" id="tidyNotes">Tidy</button>
+      <button class="btn btn-ghost btn-danger" id="clearStickies">Clear all</button>
+      <span class="badge badge-neu" id="stickyCount">0 notes</span>
+    </div>
+    <div id="board"></div>
+  </div>
+
+  <!-- ======================== PASSWORD & QR ======================== -->
+  <div class="tab-pane" id="tab-pwqr">
+    <div class="g g-2">
+      <!-- Password -->
+      <div class="panel">
+        <div class="panel-hd"><h3>🔑 Password Generator</h3></div>
+        <div class="pw-display" id="pwOut" title="Click to copy">
+          <span id="pwText">—</span>
+          <span class="pw-copy-hint">CLICK TO COPY</span>
+        </div>
+        <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthBar" style="width:0%"></div></div>
+        <div class="flex items-center gap-3 mt-2">
+          <span class="badge" id="pwEntropy">— bits</span>
+          <span class="text-xs text-muted" id="pwStrengthLabel">—</span>
+        </div>
+        <div class="divider"></div>
+        <div class="pw-opts">
+          <div>
+            <div class="label">Length</div>
+            <input type="range" id="pwLength" min="8" max="64" value="16" style="width:100%;accent-color:var(--acc)">
+            <div class="text-xs text-muted mt-2" id="pwLengthVal">16 chars</div>
+          </div>
+          <div>
+            <div class="label">Pattern</div>
+            <select id="pwPattern">
+              <option value="word">Word + nums + sym</option>
+              <option value="random">Fully random</option>
+              <option value="pin">PIN</option>
+              <option value="hex">Hex token</option>
+              <option value="uuid">UUID v4</option>
+              <option value="phrase">Passphrase (4 words)</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3" style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="checkbox-row"><input type="checkbox" id="pwUpper" checked> Uppercase</label>
+          <label class="checkbox-row"><input type="checkbox" id="pwNums" checked> Numbers</label>
+          <label class="checkbox-row"><input type="checkbox" id="pwSyms" checked> Symbols</label>
+          <label class="checkbox-row"><input type="checkbox" id="pwNoAmb"> No ambiguous</label>
+        </div>
+        <div class="flex gap-2 mt-3" style="flex-wrap:wrap">
+          <button class="btn btn-acc" id="pwGen">New password</button>
+          <button class="btn" id="pwCopy">Copy</button>
+          <button class="btn" id="pwSend">→ Sandbox</button>
+          <button class="btn" id="pwBulk">Bulk (10)</button>
+        </div>
+        <div id="pwBulkOut" style="display:none" class="mt-3">
+          <div class="label">Bulk passwords</div>
+          <div class="result-box" id="pwBulkList" style="font-size:12px"></div>
+          <button class="btn btn-sm mt-2" id="pwBulkCopy">Copy all</button>
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="panel">
+        <div class="panel-hd"><h3>📱 QR Code Generator</h3></div>
+        <div class="label">Content</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+          <input id="qrText" type="text" placeholder="URL, text, IP address…" class="mono-input"/>
+          <div style="display:flex;gap:6px;flex-direction:column">
+            <button class="btn btn-acc" id="qrMake">Generate</button>
+            <select id="qrType" style="width:100%">
+              <option value="text">Text</option>
+              <option value="url">URL</option>
+              <option value="wifi">WiFi</option>
+              <option value="email">Email</option>
+              <option value="vcard">vCard</option>
+            </select>
+          </div>
+        </div>
+        <!-- WiFi fields (hidden by default) -->
+        <div id="qrWifiFields" style="display:none;margin-top:8px">
+          <div class="g g-2 gap-2">
+            <div><div class="label">SSID</div><input id="qrSsid" type="text" placeholder="Network name"></div>
+            <div><div class="label">Password</div><input id="qrWifiPass" type="text" placeholder="Password"></div>
+            <div><div class="label">Security</div><select id="qrSecurity"><option>WPA</option><option>WEP</option><option>nopass</option></select></div>
+            <div style="display:flex;align-items:flex-end"><label class="checkbox-row"><input type="checkbox" id="qrHidden"> Hidden network</label></div>
+          </div>
+        </div>
+        <div id="qrEmailFields" style="display:none;margin-top:8px">
+          <div><div class="label">Email</div><input id="qrEmailAddr" type="email" placeholder="user@domain.com"></div>
+          <div class="mt-2"><div class="label">Subject</div><input id="qrEmailSubj" type="text" placeholder="Subject"></div>
+        </div>
+        <div class="flex gap-3 mt-3" style="align-items:flex-start">
+          <div id="qrBox" title="Click to copy"></div>
+          <div style="flex:1">
+            <div class="label">Preview / URL</div>
+            <input id="qrPreview" class="mono-input" type="text" readonly placeholder="—"/>
+            <div class="label mt-3">Size</div>
+            <input type="range" id="qrSize" min="100" max="400" value="180" style="width:100%;accent-color:var(--acc)">
+            <div class="flex gap-2 mt-3" style="flex-wrap:wrap">
+              <button class="btn" id="qrCopy">Copy image</button>
+              <button class="btn" id="qrSave">Save PNG</button>
+              <button class="btn" id="qrSend">→ Sandbox</button>
+              <button class="btn btn-ghost btn-danger" id="qrClear">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== SANDBOX ======================== -->
+  <div class="tab-pane" id="tab-sandbox">
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>📋 Clipboard Sandbox</h3>
+        <div class="acts">
+          <label class="checkbox-row text-xs"><input type="checkbox" id="smartPaste" checked> Smart paste</label>
+          <label class="checkbox-row text-xs"><input type="checkbox" id="autoOCR" checked> Auto OCR</label>
+          <button class="btn btn-sm" id="runOCRLast">OCR last image</button>
+          <button class="btn btn-sm" id="clipCopyAll">Copy all</button>
+          <button class="btn btn-sm" id="clipClean">Strip formatting</button>
+          <button class="btn btn-sm btn-danger btn-ghost" id="clipClearAll">Clear</button>
+        </div>
+      </div>
+      <div id="sandbox" class="sandbox" contenteditable="true"
+        data-placeholder="Paste or drop anything — text, screenshots, URLs. Smart paste autolinks IPs, UNCs, error codes. Click anything to copy. Double-click blank area to paste last item."></div>
+      <div class="text-xs text-muted mt-2">Paste anywhere on the page — routed here automatically. Selecting text won't trigger hotkeys.</div>
+    </div>
+  </div>
+
+  <!-- ======================== NETWORK ======================== -->
+  <div class="tab-pane" id="tab-network">
+    <div class="g g-3">
+      <!-- My IP -->
+      <div class="panel">
+        <div class="panel-hd"><h3>🌐 My Network Info</h3><button class="btn btn-sm" id="fetchMyIP">Refresh</button></div>
+        <div id="myIpResults"><div class="text-muted text-sm">Click Refresh…</div></div>
+      </div>
+
+      <!-- Subnet Calculator -->
+      <div class="panel">
+        <div class="panel-hd"><h3>📐 Subnet Calculator</h3></div>
+        <div class="flex gap-2">
+          <input id="snInput" type="text" placeholder="192.168.1.0/24 or 10.0.0.1/255.255.0.0" class="mono-input"/>
+          <button class="btn btn-acc" id="snCalc" style="white-space:nowrap">Calculate</button>
+        </div>
+        <div id="snResults" class="mt-3"></div>
+      </div>
+
+      <!-- Ping / Reachability -->
+      <div class="panel">
+        <div class="panel-hd"><h3>📡 Reachability Check</h3></div>
+        <div class="flex gap-2">
+          <input id="pingInput" type="text" placeholder="host1, host2, 8.8.8.8…" class="mono-input"/>
+          <button class="btn btn-acc" id="pingBtn" style="white-space:nowrap">Check</button>
+        </div>
+        <div class="text-xs text-muted mt-2">Comma-separated. Checks HTTP reachability (CORS-safe).</div>
+        <div id="pingResults" class="mt-3"></div>
+      </div>
+
+      <!-- IP CIDR range lister -->
+      <div class="panel g-span-3">
+        <div class="panel-hd"><h3>🗂 IP Range Details</h3></div>
+        <div id="snDetailOut"><div class="text-muted text-sm">Run the Subnet Calculator above to see range details here.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== DNS ======================== -->
+  <div class="tab-pane" id="tab-dns">
+    <div class="g g-2">
+      <div class="panel g-span-2">
+        <div class="panel-hd"><h3>🔍 DNS Lookup</h3></div>
+        <div class="flex gap-2">
+          <input id="dnsHost" type="text" placeholder="example.com, 8.8.8.8…" class="mono-input"/>
+          <select id="dnsType" style="width:140px">
+            <option value="A">A (IPv4)</option>
+            <option value="AAAA">AAAA (IPv6)</option>
+            <option value="MX">MX</option>
+            <option value="TXT">TXT</option>
+            <option value="NS">NS</option>
+            <option value="CNAME">CNAME</option>
+            <option value="SOA">SOA</option>
+            <option value="PTR">PTR (reverse)</option>
+            <option value="ALL">All common</option>
+          </select>
+          <button class="btn btn-acc" id="dnsLookup">Lookup</button>
+        </div>
+        <div class="text-xs text-muted mt-2">Uses Cloudflare DoH (1.1.1.1). PTR lookups: enter IP address.</div>
+      </div>
+      <div class="panel g-span-2">
+        <div id="dnsResults"><div class="text-muted text-sm">Results will appear here…</div></div>
+      </div>
+      <!-- Whois-style info -->
+      <div class="panel g-span-2">
+        <div class="panel-hd"><h3>🏠 IP Geo / ASN Info</h3></div>
+        <div class="flex gap-2">
+          <input id="geoInput" type="text" placeholder="IP or domain" class="mono-input"/>
+          <button class="btn btn-acc" id="geoBtn">Lookup</button>
+        </div>
+        <div id="geoResults" class="mt-3"><div class="text-muted text-sm">Enter an IP or hostname…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== PORTS ======================== -->
+  <div class="tab-pane" id="tab-ports">
+    <div class="g g-2">
+      <!-- Common ports reference -->
+      <div class="panel">
+        <div class="panel-hd"><h3>📖 Common Ports Reference</h3>
+          <input id="portSearch" type="text" placeholder="Search port or service…" style="width:220px">
+        </div>
+        <div class="overflow-x">
+          <table class="port-table" id="portTable">
+            <thead><tr><th>Port</th><th>Proto</th><th>Service</th><th>Description</th></tr></thead>
+            <tbody id="portTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Port checker -->
+      <div class="panel flex-col gap-3">
+        <div class="panel-hd"><h3>🔌 TCP Port Checker</h3></div>
+        <div class="text-xs text-muted" style="background:var(--bg3);border-radius:var(--r);padding:8px;border:1px solid var(--border)">
+          ⚠️ Browser JS cannot directly test TCP ports. Use the curl commands below, or open in terminal.
+        </div>
+        <div class="label">Generate test commands</div>
+        <div class="flex gap-2">
+          <input id="tcpHost" type="text" placeholder="192.168.1.1" class="mono-input"/>
+          <input id="tcpPort" type="text" placeholder="80,443,22" class="mono-input" style="width:140px"/>
+          <button class="btn btn-acc" id="tcpGenBtn">Generate</button>
+        </div>
+        <div id="tcpOut"></div>
+        <!-- Wake on LAN generator -->
+        <div class="divider"></div>
+        <div class="panel-hd" style="margin-bottom:0"><h3>💡 Wake-on-LAN Magic Packet</h3></div>
+        <div class="flex gap-2">
+          <input id="wolMac" type="text" placeholder="AA:BB:CC:DD:EE:FF" class="mono-input"/>
+          <button class="btn btn-acc" id="wolGen">Generate</button>
+        </div>
+        <div id="wolOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== ENCODE/HASH ======================== -->
+  <div class="tab-pane" id="tab-encode">
+    <div class="g g-2">
+      <!-- Encode/Decode -->
+      <div class="panel">
+        <div class="panel-hd"><h3>⚙️ Encode / Decode</h3></div>
+        <div class="label">Input</div>
+        <textarea id="encInput" rows="4" style="font-family:var(--font-mono);font-size:12px" placeholder="Enter text…"></textarea>
+        <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+          <button class="btn btn-sm" data-enc="b64e">Base64 ↑</button>
+          <button class="btn btn-sm" data-enc="b64d">Base64 ↓</button>
+          <button class="btn btn-sm" data-enc="urle">URL ↑</button>
+          <button class="btn btn-sm" data-enc="urld">URL ↓</button>
+          <button class="btn btn-sm" data-enc="htmle">HTML ↑</button>
+          <button class="btn btn-sm" data-enc="htmld">HTML ↓</button>
+          <button class="btn btn-sm" data-enc="hex">→ Hex</button>
+          <button class="btn btn-sm" data-enc="hexd">Hex →</button>
+          <button class="btn btn-sm" data-enc="bin">→ Binary</button>
+          <button class="btn btn-sm" data-enc="bind">Binary →</button>
+          <button class="btn btn-sm" data-enc="rot13">ROT13</button>
+          <button class="btn btn-sm" data-enc="rev">Reverse</button>
+          <button class="btn btn-sm" data-enc="jwtd">JWT decode</button>
+        </div>
+        <div class="label mt-3">Output</div>
+        <div class="result-box" id="encOutput" style="min-height:80px;cursor:pointer" title="Click to copy">—</div>
+        <div class="text-xs text-muted mt-2">Click output to copy.</div>
+      </div>
+      <!-- Hashing -->
+      <div class="panel">
+        <div class="panel-hd"><h3>🔐 Hash Generator</h3></div>
+        <div class="label">Input text</div>
+        <textarea id="hashInput" rows="3" style="font-family:var(--font-mono);font-size:12px" placeholder="Enter text or paste file content…"></textarea>
+        <button class="btn btn-acc mt-2 w-full" id="hashBtn">Compute all hashes</button>
+        <div class="divider"></div>
+        <div id="hashResults"><div class="text-muted text-sm">Results will appear here…</div></div>
+        <div class="divider"></div>
+        <div class="panel-hd" style="margin-bottom:0;margin-top:4px"><h3>🔍 Hash Comparator</h3></div>
+        <div class="mt-2 flex gap-2">
+          <input id="hashA" type="text" placeholder="Hash A" class="mono-input"/>
+          <input id="hashB" type="text" placeholder="Hash B" class="mono-input"/>
+          <button class="btn" id="hashCompare">Compare</button>
+        </div>
+        <div id="hashCompResult" class="mt-2"></div>
+      </div>
+      <!-- JSON formatter -->
+      <div class="panel g-span-2">
+        <div class="panel-hd"><h3>📄 JSON Formatter / Minifier</h3></div>
+        <div class="encode-cols">
+          <div>
+            <div class="label">Input</div>
+            <textarea id="jsonInput" rows="8" style="font-family:var(--font-mono);font-size:12px" placeholder='{"paste":"json here"}'></textarea>
+            <div class="flex gap-2 mt-2">
+              <button class="btn btn-sm btn-acc" id="jsonFormat">Format</button>
+              <button class="btn btn-sm" id="jsonMinify">Minify</button>
+              <button class="btn btn-sm" id="jsonValidate">Validate</button>
+            </div>
+          </div>
+          <div>
+            <div class="label">Output</div>
+            <div class="result-box" id="jsonOutput" style="min-height:180px;cursor:pointer;font-size:12px" title="Click to copy">—</div>
+            <div id="jsonStatus" class="mt-2 text-xs"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== REGEX ======================== -->
+  <div class="tab-pane" id="tab-regex">
+    <div class="panel">
+      <div class="panel-hd"><h3>✏️ Regex Tester</h3></div>
+      <div class="g g-2">
+        <div>
+          <div class="label">Pattern</div>
+          <div class="flex gap-2">
+            <input id="rxPattern" type="text" placeholder="/pattern/" class="mono-input" style="flex:1"/>
+            <input id="rxFlags" type="text" placeholder="gim" class="mono-input" style="width:70px"/>
+          </div>
+          <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+            <span class="text-xs text-muted">Quick insert:</span>
+            <button class="btn btn-sm" data-rx="\\d+">\\d+ (num)</button>
+            <button class="btn btn-sm" data-rx="\\b\\w+\\b">\\b\\w+\\b (word)</button>
+            <button class="btn btn-sm" data-rx="[\\w.-]+@[\\w.-]+\\.\\w{2,}">Email</button>
+            <button class="btn btn-sm" data-rx="https?://[^\\s]+">URL</button>
+            <button class="btn btn-sm" data-rx="\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b">IPv4</button>
+            <button class="btn btn-sm" data-rx="[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}">MAC</button>
+            <button class="btn btn-sm" data-rx="\\b[0-9]{1,5}\\b">Port num</button>
+          </div>
+          <div class="label mt-3">Test string</div>
+          <textarea id="rxTestStr" rows="6" style="font-family:var(--font-mono);font-size:12px" placeholder="Paste text to test against…"></textarea>
+        </div>
+        <div>
+          <div class="label">Highlighted matches</div>
+          <div class="regex-area" id="rxHighlight"></div>
+          <div class="label mt-3">Match list</div>
+          <div class="result-box" id="rxMatches" style="min-height:100px;font-size:12px">—</div>
+          <div id="rxStatus" class="text-xs mt-2"></div>
+          <div class="label mt-3">Replace</div>
+          <div class="flex gap-2">
+            <input id="rxReplace" type="text" placeholder="Replacement string ($1, $2…)" class="mono-input"/>
+            <button class="btn" id="rxReplaceBtn">Replace</button>
+          </div>
+          <div class="result-box mt-2" id="rxReplaceOut" style="font-size:12px">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== COLOR ======================== -->
+  <div class="tab-pane" id="tab-color">
+    <div class="g g-3">
+      <div class="panel">
+        <div class="panel-hd"><h3>🎨 Color Converter</h3></div>
+        <div class="flex gap-3 items-center mb-3">
+          <input type="color" id="colorPicker" style="width:60px;height:60px;border:none;background:none;cursor:pointer;border-radius:10px;padding:0">
+          <div style="flex:1">
+            <div class="label">Input (hex, rgb(), hsl()…)</div>
+            <input id="colorInput" type="text" placeholder="#3b82f6 or rgb(59,130,246)" class="mono-input"/>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div id="colorConvResults"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><h3>🌈 Palette Generator</h3></div>
+        <div class="flex gap-2 mb-3">
+          <input id="paletteBase" type="text" placeholder="#3b82f6" class="mono-input"/>
+          <select id="paletteType" style="width:150px">
+            <option value="shades">Shades</option>
+            <option value="comp">Complementary</option>
+            <option value="tri">Triadic</option>
+            <option value="tetra">Tetradic</option>
+            <option value="analog">Analogous</option>
+          </select>
+          <button class="btn btn-acc" id="paletteGen">Generate</button>
+        </div>
+        <div id="paletteOut" class="color-grid"></div>
+        <button class="btn btn-sm mt-2" id="paletteCopy" style="display:none">Copy as CSS variables</button>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><h3>🔍 Contrast Checker (WCAG)</h3></div>
+        <div class="flex gap-2 mb-2">
+          <div style="flex:1"><div class="label">Foreground</div><input id="wcagFg" type="text" placeholder="#ffffff" class="mono-input"/></div>
+          <div style="flex:1"><div class="label">Background</div><input id="wcagBg" type="text" placeholder="#000000" class="mono-input"/></div>
+          <div style="align-self:flex-end"><button class="btn btn-acc" id="wcagCheck">Check</button></div>
+        </div>
+        <div id="wcagPreview" style="border-radius:var(--r);padding:16px;margin-top:8px;font-size:16px;font-weight:600;text-align:center;border:1px solid var(--border);min-height:60px;display:flex;align-items:center;justify-content:center">Sample text preview</div>
+        <div id="wcagResults" class="mt-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== CHECKLISTS ======================== -->
+  <div class="tab-pane" id="tab-checklist">
+    <div class="g g-2">
+      <div class="panel">
+        <div class="panel-hd"><h3>✅ Quick Checklists</h3>
+          <div class="acts">
+            <button class="btn btn-sm" id="newChecklist">+ New list</button>
+            <button class="btn btn-sm btn-ghost btn-danger" id="clearChecklists">Clear all</button>
+          </div>
+        </div>
+        <div id="checklistContainer"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><h3>📋 Preset Runbooks</h3></div>
+        <div class="flex gap-2 mb-3" style="flex-wrap:wrap">
+          <button class="btn btn-sm" data-preset="new-pc">New PC Setup</button>
+          <button class="btn btn-sm" data-preset="network-issue">Network Troubleshoot</button>
+          <button class="btn btn-sm" data-preset="security-audit">Security Audit</button>
+          <button class="btn btn-sm" data-preset="server-deploy">Server Deploy</button>
+          <button class="btn btn-sm" data-preset="offboarding">User Offboarding</button>
+        </div>
+        <div id="presetOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TIMERS ======================== -->
+  <div class="tab-pane" id="tab-timers">
+    <div class="g g-3">
+      <!-- Stopwatch -->
+      <div class="panel text-center">
+        <div class="panel-hd"><h3>⏱ Stopwatch</h3></div>
+        <div class="timer-display" id="swDisplay">00:00:00.0</div>
+        <div class="flex gap-2 mt-2" style="justify-content:center">
+          <button class="btn btn-acc" id="swStart">Start</button>
+          <button class="btn" id="swLap">Lap</button>
+          <button class="btn" id="swReset">Reset</button>
+        </div>
+        <div id="swLaps" style="max-height:140px;overflow-y:auto;margin-top:8px;text-align:left"></div>
+      </div>
+      <!-- Countdown -->
+      <div class="panel text-center">
+        <div class="panel-hd"><h3>⏳ Countdown</h3></div>
+        <div class="flex gap-2 mb-2" style="justify-content:center">
+          <input id="cdHH" type="number" min="0" max="99" value="0" style="width:60px;text-align:center" class="mono-input"/>
+          <span style="font-size:22px;align-self:center;color:var(--muted)">:</span>
+          <input id="cdMM" type="number" min="0" max="59" value="5" style="width:60px;text-align:center" class="mono-input"/>
+          <span style="font-size:22px;align-self:center;color:var(--muted)">:</span>
+          <input id="cdSS" type="number" min="0" max="59" value="0" style="width:60px;text-align:center" class="mono-input"/>
+        </div>
+        <div class="timer-display" id="cdDisplay">00:05:00</div>
+        <div class="flex gap-2 mt-2" style="justify-content:center">
+          <button class="btn btn-acc" id="cdStart">Start</button>
+          <button class="btn" id="cdReset">Reset</button>
+        </div>
+      </div>
+      <!-- UTC / Timezone converter -->
+      <div class="panel">
+        <div class="panel-hd"><h3>🌍 Timezone Converter</h3></div>
+        <div class="label">Datetime (local)</div>
+        <input id="tzInput" type="datetime-local" class="mono-input"/>
+        <div class="label mt-2">Zones to show</div>
+        <div id="tzResults" class="mt-1"></div>
+        <button class="btn mt-2" id="tzNow">Use now</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+</div><!-- /shell -->
+
+<div id="toast-rack"></div>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js"></script>
+<script>
+/* ============================================================
+   GLOBALS & HELPERS
+============================================================ */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let APP_MEM = null;
+
+function toast(msg, type='ok', dur=1800){
+  const rack = $('#toast-rack');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  const icons = {ok:'✅', warn:'⚠️', bad:'❌', info:'ℹ️'};
+  el.innerHTML = `<span class="toast-icon">${icons[type]||icons.ok}</span>${esc(msg)}`;
+  rack.appendChild(el);
+  setTimeout(()=>{ el.style.animation='slideOut .2s ease forwards'; setTimeout(()=>el.remove(),200); }, dur);
+}
+
+async function copyText(txt){
+  try{ await navigator.clipboard.writeText(txt); updateMem({type:'text',data:txt}); toast('Copied'); }
+  catch{ updateMem({type:'text',data:txt}); toast('Saved to app clipboard'); }
+}
+async function copyImageFromDataURL(url){
+  try{ const b=await(await fetch(url)).blob(); await navigator.clipboard.write([new ClipboardItem({[b.type||'image/png']:b})]); updateMem({type:'image',data:url}); toast('Image copied'); }
+  catch{ updateMem({type:'image',data:url}); toast('Image saved to app clipboard'); }
+}
+function rand(max){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%max; }
+
+/* ============================================================
+   APP MEMORY / CLIPBOARD
+============================================================ */
+function updateMem(obj){
+  APP_MEM = obj;
+  const lab = $('#mem-label'), th = $('#mem-thumb');
+  if(!obj){ lab.textContent='Empty'; th.style.display='none'; return; }
+  if(obj.type==='text'){ lab.textContent=obj.data.length>28?obj.data.slice(0,28)+'…':obj.data; th.style.display='none'; }
+  else { lab.textContent='Image'; th.src=obj.data; th.style.display='inline-block'; }
+}
+$('#memPaste').addEventListener('click', pasteFromMemory);
+$('#memClear').addEventListener('click', ()=>updateMem(null));
+
+/* ============================================================
+   THEME + CLOCK
+============================================================ */
+const savedTheme = localStorage.getItem('itq2_theme')||'default';
+if(savedTheme!=='default') document.documentElement.setAttribute('data-theme',savedTheme);
+$('#themePick').value = savedTheme;
+$('#themePick').addEventListener('change', e=>{
+  const v=e.target.value;
+  if(v==='default') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme',v);
+  localStorage.setItem('itq2_theme',v);
+});
+function tick(){
+  const d=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  $('#clock').textContent=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  $('#date-lbl').textContent=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+setInterval(tick,1000); tick();
+
+/* ============================================================
+   TABS
+============================================================ */
+$$('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+    $$('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const pane = $(`#tab-${btn.dataset.tab}`);
+    if(pane) pane.classList.add('active');
+  });
+});
+
+/* ============================================================
+   STICKY NOTES
+============================================================ */
+const board = $('#board');
+let stickies = JSON.parse(localStorage.getItem('itq2_stickies')||'{}');
+const randRot = ()=>(Math.random()*2.4-1.2).toFixed(2)+'deg';
+$('#snapToggle').checked = localStorage.getItem('itq2_snap')==='1';
+$('#snapToggle').addEventListener('change', e=>localStorage.setItem('itq2_snap',e.target.checked?'1':'0'));
+document.addEventListener('keydown',e=>{
+  if(e.key.toLowerCase()==='n' && !e.target.matches('input,textarea,[contenteditable="true"]')){
+    e.preventDefault(); newSticky();
+  }
+});
+function saveStickies(){ localStorage.setItem('itq2_stickies', JSON.stringify(stickies)); }
+function renderStickies(){
+  board.innerHTML='';
+  Object.values(stickies).sort((a,b)=>a.z-b.z).forEach(addStickyEl);
+  updateStickyCount();
+}
+function updateStickyCount(){ $('#stickyCount').textContent = Object.keys(stickies).length+' notes'; }
+function addStickyEl(n){
+  const el=document.createElement('div');
+  el.className=`sticky ${n.color||'yellow'}`;
+  el.style.cssText=`left:${n.x||16}px;top:${n.y||16}px;width:${n.w||320}px;height:${n.h||200}px;z-index:${n.z||1}`;
+  el.style.setProperty('--rot',n.rot||'-0.8deg');
+  el.dataset.id=n.id;
+  el.innerHTML=`
+    <div class="s-bar">
+      <input class="s-title" value="${esc(n.title||'')}" placeholder="Title…"/>
+      <button class="s-btn" data-a="copy" title="Copy">⎘</button>
+      <button class="s-btn" data-a="del" title="Delete">✕</button>
+    </div>
+    <textarea class="s-body" placeholder="Type here…" spellcheck="true">${esc(n.body||'')}</textarea>
+    <div class="s-resize"></div>
+  `;
+  board.appendChild(el);
+  const bar=el.querySelector('.s-bar'); let ox,oy,sx,sy;
+  bar.addEventListener('mousedown',e=>{
+    if(e.target.closest('.s-btn')||e.target.tagName==='INPUT') return;
+    bringForward(el,n);
+    ox=e.clientX; oy=e.clientY; sx=parseInt(el.style.left); sy=parseInt(el.style.top);
+    const mm=ev=>{ el.style.left=(sx+ev.clientX-ox)+'px'; el.style.top=(sy+ev.clientY-oy)+'px'; };
+    const up=()=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',up); snapMaybe(el); savePos(el); };
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',up);
+  });
+  const rs=el.querySelector('.s-resize'); let rw,rh;
+  rs.addEventListener('mousedown',e=>{
+    e.stopPropagation(); bringForward(el,n);
+    ox=e.clientX; oy=e.clientY; rw=parseInt(el.style.width); rh=parseInt(el.style.height);
+    const mm=ev=>{ el.style.width=(rw+ev.clientX-ox)+'px'; el.style.height=(rh+ev.clientY-oy)+'px'; };
+    const up=()=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',up); savePos(el); };
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',up);
+  });
+  let tmr; const save=()=>{
+    const t=el.querySelector('.s-title'); const b=el.querySelector('.s-body');
+    n.title=t.value; n.body=b.value; stickies[n.id]=n; saveStickies();
+  };
+  el.querySelector('.s-title').addEventListener('input',()=>{clearTimeout(tmr);tmr=setTimeout(save,250)});
+  el.querySelector('.s-body').addEventListener('input',()=>{clearTimeout(tmr);tmr=setTimeout(save,250)});
+  el.querySelector('[data-a="del"]').addEventListener('click',()=>{ delete stickies[n.id]; saveStickies(); el.remove(); updateStickyCount(); });
+  el.querySelector('[data-a="copy"]').addEventListener('click',()=>{ copyText((n.title?n.title+'\n':'')+n.body); });
+  return el;
+}
+function bringForward(el,n){ n.z=Date.now()%1e9; el.style.zIndex=n.z; }
+function snapMaybe(el){ if($('#snapToggle').checked){ const g=16; el.style.left=(Math.round(parseInt(el.style.left)/g)*g)+'px'; el.style.top=(Math.round(parseInt(el.style.top)/g)*g)+'px'; } }
+function savePos(el){ const id=el.dataset.id; const n=stickies[id]; n.x=parseInt(el.style.left); n.y=parseInt(el.style.top); n.w=parseInt(el.style.width); n.h=parseInt(el.style.height); n.updated=Date.now(); stickies[id]=n; saveStickies(); }
+function newSticky(){
+  const color=$('#stickyColor').value;
+  const id=crypto.randomUUID();
+  const n={id,title:'',body:'',x:16+rand(60),y:16+rand(40),w:320,h:200,color,rot:randRot(),z:Date.now()%1e9,created:Date.now(),updated:Date.now()};
+  stickies[id]=n; saveStickies();
+  const el=addStickyEl(n); updateStickyCount();
+  const b=el.querySelector('.s-body'); b.focus();
+}
+$('#newSticky').addEventListener('click',newSticky);
+$('#clearStickies').addEventListener('click',()=>{ if(confirm('Clear all notes?')){ stickies={}; saveStickies(); renderStickies(); }});
+$('#tidyNotes').addEventListener('click',()=>{
+  const gap=14, cw=336;
+  const cols=Math.max(1,Math.floor((board.clientWidth-gap)/cw));
+  const ys=new Array(cols).fill(gap);
+  Object.values(stickies).sort((a,b)=>(a.created||0)-(b.created||0)).forEach(n=>{
+    const c=ys.indexOf(Math.min(...ys));
+    n.w=320; n.x=gap+c*cw; n.y=ys[c]; n.rot='0deg'; ys[c]+=(n.h||200)+gap;
+  });
+  saveStickies(); renderStickies();
+});
+renderStickies();
+
+/* ============================================================
+   PASSWORDS
+============================================================ */
+let WORDS=[];
+async function loadWords(){
+  try{ const r=await fetch('./words_alpha.txt'); WORDS=(await r.text()).split(/\r?\n/).map(w=>w.trim()).filter(w=>w.length>=4&&w.length<=10); }
+  catch{ WORDS=['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india','juliet','kilo','lima','mike','november','oscar','papa','quebec','romeo','sierra','tango','uniform','victor','whiskey','xray','yankee','zulu']; }
+  generatePassword();
+}
+function choose(){ return WORDS[rand(WORDS.length)]||'secure'; }
+function generatePassword(){
+  const pattern=$('#pwPattern').value;
+  const len=parseInt($('#pwLength').value)||16;
+  const noAmb=$('#pwNoAmb').checked;
+  const upper=$('#pwUpper').checked;
+  const nums=$('#pwNums').checked;
+  const syms=$('#pwSyms').checked;
+  let out='';
+  const ambig='0O1lI';
+  const filter=s=>noAmb?s.split('').filter(c=>!ambig.includes(c)).join(''):s;
+  if(pattern==='word'){
+    const w=choose(); const wf=w[0].toUpperCase()+w.slice(1);
+    const n=String(rand(100)).padStart(2,'0');
+    const sy='!@#$%^&*-_+?'; const sym=sy[rand(sy.length)];
+    out=`${wf}${n}${sym}`;
+  } else if(pattern==='random'){
+    let chars='abcdefghijkmnopqrstuvwxyz';
+    if(upper) chars+='ABCDEFGHJKLMNPQRSTUVWXYZ';
+    if(nums) chars+=(noAmb?'23456789':'0123456789');
+    if(syms) chars+='!@#$%^&*-_+?';
+    chars=filter(chars);
+    for(let i=0;i<len;i++) out+=chars[rand(chars.length)];
+  } else if(pattern==='pin'){
+    for(let i=0;i<len;i++) out+=rand(10);
+  } else if(pattern==='hex'){
+    const bytes=new Uint8Array(Math.ceil(len/2));
+    crypto.getRandomValues(bytes);
+    out=Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,len);
+  } else if(pattern==='uuid'){
+    out=crypto.randomUUID();
+  } else if(pattern==='phrase'){
+    const ws=[choose(),choose(),choose(),choose()];
+    out=ws.map(w=>w[0].toUpperCase()+w.slice(1)).join('-')+rand(99);
+  }
+  $('#pwText').textContent=out;
+  const bits=Math.round(Math.log2(Math.pow(95, out.length)));
+  const b=$('#pwEntropy');
+  const fill=$('#pwStrengthBar');
+  const lbl=$('#pwStrengthLabel');
+  const pct=Math.min(100,Math.round(bits/1.28));
+  if(bits>=80){ b.className='badge badge-ok'; b.textContent=`${bits} bits`; fill.style.background='var(--acc3)'; lbl.textContent='Very Strong'; }
+  else if(bits>=60){ b.className='badge badge-info'; b.textContent=`${bits} bits`; fill.style.background='var(--acc)'; lbl.textContent='Strong'; }
+  else if(bits>=40){ b.className='badge badge-warn'; b.textContent=`${bits} bits`; fill.style.background='var(--acc4)'; lbl.textContent='Moderate'; }
+  else { b.className='badge badge-bad'; b.textContent=`${bits} bits`; fill.style.background='var(--acc5)'; lbl.textContent='Weak'; }
+  fill.style.width=pct+'%';
+  b.textContent=`${bits} bits`;
+}
+$('#pwLength').addEventListener('input',e=>{ $('#pwLengthVal').textContent=e.target.value+' chars'; generatePassword(); });
+$('#pwPattern').addEventListener('change', generatePassword);
+$('#pwUpper').addEventListener('change', generatePassword);
+$('#pwNums').addEventListener('change', generatePassword);
+$('#pwSyms').addEventListener('change', generatePassword);
+$('#pwNoAmb').addEventListener('change', generatePassword);
+$('#pwGen').addEventListener('click', generatePassword);
+$('#pwCopy').addEventListener('click',()=>copyText($('#pwText').textContent));
+$('#pwOut').addEventListener('click',()=>copyText($('#pwText').textContent));
+$('#pwSend').addEventListener('click',()=>{ focusSandboxEnd(); insertTextAtCaret($('#pwText').textContent+'\n'); });
+$('#pwBulk').addEventListener('click',()=>{
+  const lines=[];
+  for(let i=0;i<10;i++){ generatePassword(); lines.push($('#pwText').textContent); }
+  generatePassword(); // regenerate final
+  const box=$('#pwBulkList'); box.textContent=lines.join('\n');
+  const wrap=$('#pwBulkOut'); wrap.style.display='block';
+});
+$('#pwBulkCopy').addEventListener('click',()=>copyText($('#pwBulkList').textContent));
+loadWords();
+
+/* ============================================================
+   QR
+============================================================ */
+let qr, qrCurrentSize=180;
+function ensureQR(){ if(!qr){ qr=new QRCode('qrBox',{text:'',width:qrCurrentSize,height:qrCurrentSize}); } }
+function getQREl(){ return $('#qrBox canvas,#qrBox img'); }
+$('#qrType').addEventListener('change',e=>{
+  $$('#qrWifiFields,#qrEmailFields').forEach(el=>el.style.display='none');
+  if(e.target.value==='wifi') $('#qrWifiFields').style.display='block';
+  if(e.target.value==='email') $('#qrEmailFields').style.display='block';
+});
+$('#qrSize').addEventListener('input',e=>{
+  const s=parseInt(e.target.value);
+  const box=$('#qrBox'); box.style.width=s+'px'; box.style.height=s+'px'; qrCurrentSize=s;
+});
+function buildQRContent(){
+  const type=$('#qrType').value; const base=$('#qrText').value||' ';
+  if(type==='wifi'){
+    const ssid=$('#qrSsid').value||''; const pass=$('#qrWifiPass').value||'';
+    const sec=$('#qrSecurity').value||'WPA'; const hid=$('#qrHidden').checked?'true':'false';
+    return `WIFI:T:${sec};S:${ssid};P:${pass};H:${hid};;`;
+  }
+  if(type==='email'){
+    const e=$('#qrEmailAddr').value||''; const s=$('#qrEmailSubj').value||'';
+    return `mailto:${e}${s?'?subject='+encodeURIComponent(s):''}`;
+  }
+  return base;
+}
+$('#qrMake').addEventListener('click',()=>{ ensureQR(); const t=buildQRContent(); qr.makeCode(t); $('#qrPreview').value=t; });
+$('#qrCopy').addEventListener('click',()=>{ const el=getQREl(); if(!el) return; copyImageFromDataURL(el.nodeName==='CANVAS'?el.toDataURL('image/png'):el.src); });
+$('#qrBox').addEventListener('click',()=>{ const el=getQREl(); if(el){ copyImageFromDataURL(el.nodeName==='CANVAS'?el.toDataURL('image/png'):el.src); } });
+$('#qrPreview').addEventListener('click',()=>{ const v=$('#qrPreview').value; if(v) copyText(v); });
+$('#qrSave').addEventListener('click',()=>{
+  const el=getQREl(); if(!el) return;
+  const url=el.nodeName==='CANVAS'?el.toDataURL('image/png'):el.src;
+  const a=document.createElement('a'); a.href=url; a.download='qr.png'; a.click();
+});
+$('#qrSend').addEventListener('click',()=>{ const el=getQREl(); if(!el) return; const url=el.nodeName==='CANVAS'?el.toDataURL('image/png'):el.src; focusSandboxEnd(); insertImageAtCaret(url,'QR'); updateMem({type:'image',data:url}); });
+$('#qrClear').addEventListener('click',()=>{ $('#qrPreview').value=''; $('#qrText').value=''; $('#qrBox').innerHTML=''; qr=null; });
+
+/* ============================================================
+   SANDBOX
+============================================================ */
+const sandbox = $('#sandbox');
+let lastImageNode = null;
+function focusSandboxEnd(){ sandbox.focus(); const r=document.createRange(); r.selectNodeContents(sandbox); r.collapse(false); const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+function insertTextAtCaret(text){ const sel=window.getSelection(); if(!sel||!sel.rangeCount){ focusSandboxEnd(); } document.execCommand('insertText',false,text); }
+function insertImageAtCaret(url,alt='pasted'){
+  const img=new Image(); img.src=url; img.alt=alt;
+  const sel=window.getSelection(); if(!sel||!sel.rangeCount){ focusSandboxEnd(); }
+  const range=window.getSelection().getRangeAt(0); range.collapse(false); range.insertNode(img); range.setStartAfter(img); range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+  lastImageNode=img;
+  if($('#autoOCR').checked) runOCROnImage(img);
+}
+function setCaretFromPoint(e){ const sel=window.getSelection(); let range=null; if(document.caretRangeFromPoint){ range=document.caretRangeFromPoint(e.clientX,e.clientY); } else if(document.caretPositionFromPoint){ const pos=document.caretPositionFromPoint(e.clientX,e.clientY); if(pos){ range=document.createRange(); range.setStart(pos.offsetNode,pos.offset); } } if(range){ sel.removeAllRanges(); sel.addRange(range); } else { focusSandboxEnd(); } }
+const urlRe=/https?:\/\/[^\s<>"']+/g;
+const uncRe=/\\\\[A-Za-z0-9._$-]+\\[^\s\\:*?"<>|]+(?:\\[^\s\\:*?"<>|]+)*/g;
+const ipRe=/\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g;
+const errHex=/\b0x[0-9a-fA-F]+\b/g;
+function isCodeLine(l){ return /^\s{2,}/.test(l)||/\t/.test(l)||/^(PS |C:\\|\\\\|\[|\{)/.test(l)||l.length>120; }
+function linkifyInto(container,text){
+  let idx=0; const master=new RegExp(`${urlRe.source}|${uncRe.source}|${ipRe.source}|${errHex.source}`,'g'); let m;
+  while((m=master.exec(text))){
+    if(m.index>idx) container.appendChild(document.createTextNode(text.slice(idx,m.index)));
+    const tok=m[0]; const span=document.createElement(tok.startsWith('http')?'a':'span');
+    span.className='sb-token'; span.textContent=tok; span.dataset.val=tok;
+    if(span.tagName==='A'){ span.href=tok; span.target='_blank'; span.rel='noreferrer'; }
+    container.appendChild(span); idx=m.index+tok.length;
+  }
+  if(idx<text.length) container.appendChild(document.createTextNode(text.slice(idx)));
+}
+function transformTextToRichNodes(text){
+  const frag=document.createDocumentFragment();
+  const lines=text.replace(/\r\n?/g,'\n').split('\n');
+  let bucket=[];
+  function flushCode(){ if(!bucket.length) return; const pre=document.createElement('pre'); pre.className='sb-codeblock'; pre.innerText=bucket.join('\n'); const btn=document.createElement('button'); btn.className='btn btn-sm sb-copy-btn'; btn.textContent='Copy'; pre.appendChild(btn); frag.appendChild(pre); bucket=[]; }
+  for(const raw of lines){ if(isCodeLine(raw)){ bucket.push(raw); continue; } flushCode(); const p=document.createElement('p'); linkifyInto(p,raw); frag.appendChild(p); }
+  flushCode(); return frag;
+}
+function handlePasteEvent(e){
+  const items=e.clipboardData&&e.clipboardData.items?Array.from(e.clipboardData.items):[];
+  const hasImage=items.some(it=>it.type&&it.type.startsWith('image/'));
+  if(hasImage){ e.preventDefault(); items.forEach(it=>{ if(it.type.startsWith('image/')){ const f=it.getAsFile?.(); if(f){ const fr=new FileReader(); fr.onload=()=>insertImageAtCaret(fr.result,f.name||'pasted'); fr.readAsDataURL(f); } } }); return; }
+  if(!$('#smartPaste').checked) return;
+  const txt=e.clipboardData.getData('text/plain'); if(!txt) return;
+  e.preventDefault();
+  const frag=transformTextToRichNodes(txt);
+  const sel=window.getSelection(); if(!sel||!sel.rangeCount){ focusSandboxEnd(); }
+  const range=window.getSelection().getRangeAt(0); range.deleteContents(); range.insertNode(frag); range.collapse(false);
+}
+sandbox.addEventListener('paste',handlePasteEvent);
+sandbox.addEventListener('dragover',e=>e.preventDefault());
+sandbox.addEventListener('drop',e=>{ e.preventDefault(); for(const f of e.dataTransfer.files||[]){ if(f.type.startsWith('image/')){ const fr=new FileReader(); fr.onload=()=>insertImageAtCaret(fr.result,f.name||'pasted'); fr.readAsDataURL(f); } else { insertTextAtCaret(f.name+'\n'); } } });
+let isMouseDown=false, isDragging=false, msx=0, msy=0;
+sandbox.addEventListener('mousedown',e=>{ isMouseDown=true; isDragging=false; msx=e.clientX; msy=e.clientY; });
+sandbox.addEventListener('mousemove',e=>{ if(!isMouseDown) return; if(Math.abs(e.clientX-msx)>3||Math.abs(e.clientY-msy)>3) isDragging=true; });
+sandbox.addEventListener('mouseup',()=>{ isMouseDown=false; setTimeout(()=>isDragging=false,0); });
+sandbox.addEventListener('click',async e=>{
+  if(isDragging) return;
+  const sel=window.getSelection(); if(sel&&!sel.isCollapsed) return;
+  const t=e.target;
+  if(t.classList.contains('sb-token')){ copyText(t.dataset.val||t.textContent.trim()); return; }
+  if(t.classList.contains('sb-copy-btn')){ copyText(t.closest('.sb-codeblock').innerText); return; }
+  if(t.tagName==='IMG'){ copyImageFromDataURL(t.src); return; }
+  const blk=t.closest('p,li,pre,div');
+  const txt=(blk?blk.innerText:sandbox.innerText).trim();
+  if(txt) copyText(txt);
+});
+let lastPasteAt=0;
+sandbox.addEventListener('dblclick',e=>{
+  const sel=window.getSelection(); if(sel&&!sel.isCollapsed) return;
+  const now=Date.now(); if(now-lastPasteAt<250) return; lastPasteAt=now;
+  setCaretFromPoint(e); pasteFromMemory();
+});
+window.addEventListener('paste',e=>{
+  const inside=e.composedPath().includes(sandbox);
+  const inField=e.target&&(e.target.matches('input,textarea')||e.target.isContentEditable);
+  if(inside||inField) return;
+  focusSandboxEnd(); handlePasteEvent(e);
+});
+$('#clipCopyAll').addEventListener('click',async()=>{
+  try{ await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([sandbox.innerHTML],{type:'text/html'}),'text/plain':new Blob([sandbox.innerText],{type:'text/plain'})})]); toast('Sandbox copied'); }
+  catch{ toast('Copy blocked','warn'); }
+});
+$('#clipClean').addEventListener('click',()=>{ const t=sandbox.innerText||''; sandbox.innerHTML=''; focusSandboxEnd(); insertTextAtCaret(t); });
+$('#clipClearAll').addEventListener('click',()=>{ sandbox.innerHTML=''; });
+$('#runOCRLast').addEventListener('click',()=>{ if(lastImageNode) runOCROnImage(lastImageNode); else toast('No image yet','warn'); });
+function pasteFromMemory(){ if(!APP_MEM){ toast('Clipboard empty','warn'); return; } if(APP_MEM.type==='text'){ insertTextAtCaret(APP_MEM.data); } else { insertImageAtCaret(APP_MEM.data); } }
+async function runOCROnImage(img){
+  if(!(window.Tesseract&&Tesseract.recognize)){ toast('OCR unavailable','warn'); return; }
+  const box=document.createElement('div'); box.className='ocrbox';
+  box.innerHTML=`<div class="ocr-hdr"><strong>OCR</strong><span class="ocr-txt">Reading…</span><button class="btn btn-sm" data-copy>Copy</button></div><div class="mono text-sm" style="margin-top:4px"></div>`;
+  img.insertAdjacentElement('afterend',box);
+  try{ const res=await Tesseract.recognize(img,'eng'); const text=(res?.data?.text||'').trim(); box.querySelector('.ocr-txt').textContent=text?'Done':'No text'; box.querySelector('div.mono').textContent=text; box.querySelector('[data-copy]').addEventListener('click',()=>copyText(text)); }
+  catch(err){ box.querySelector('.ocr-txt').textContent='Failed'; }
+}
+
+/* ============================================================
+   NETWORK TOOLS
+============================================================ */
+$('#fetchMyIP').addEventListener('click', async()=>{
+  const out=$('#myIpResults'); out.innerHTML='<div class="text-muted text-sm">Fetching…</div>';
+  try{
+    const r=await fetch('https://ipapi.co/json/');
+    const d=await r.json();
+    const rows=[
+      ['Public IP', d.ip],
+      ['City', d.city],
+      ['Region', d.region],
+      ['Country', d.country_name],
+      ['ISP / ASN', `${d.org}`],
+      ['Timezone', d.timezone],
+      ['Latitude', d.latitude],
+      ['Longitude', d.longitude],
+    ];
+    out.innerHTML=`<div class="net-card">${rows.map(([k,v])=>`<div class="net-row"><span class="net-key">${k}</span><span class="net-val mono" title="Click to copy" data-copy="${esc(String(v))}">${esc(String(v||'—'))}</span></div>`).join('')}</div>`;
+    out.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>copyText(el.dataset.copy)));
+  }catch(e){ out.innerHTML='<div class="badge badge-bad">Error fetching IP info</div>'; }
+});
+
+// Subnet Calculator
+$('#snCalc').addEventListener('click', calcSubnet);
+function calcSubnet(){
+  const raw=$('#snInput').value.trim();
+  const out=$('#snResults'); const detail=$('#snDetailOut');
+  if(!raw){ out.innerHTML='<span class="badge badge-warn">Enter CIDR notation</span>'; return; }
+  try{
+    let ip, prefix;
+    if(raw.includes('/')){
+      const [a,b]=raw.split('/');
+      ip=a.trim(); const bp=b.trim();
+      if(bp.includes('.')){
+        // dotted mask
+        const maskBits=dotMaskToPrefix(bp);
+        prefix=maskBits;
+      } else { prefix=parseInt(bp); }
+    } else { ip=raw; prefix=24; }
+    const ipInt=ipToInt(ip);
+    const mask=(prefix===0)?0:(0xFFFFFFFF<<(32-prefix))>>>0;
+    const net=ipInt&mask;
+    const bcast=net|(~mask>>>0);
+    const hosts=prefix>=31?Math.max(0,Math.pow(2,32-prefix)):(Math.pow(2,32-prefix)-2);
+    const wildcard=~mask>>>0;
+    const rows=[
+      ['Network',intToIp(net)],
+      ['Broadcast',intToIp(bcast)],
+      ['Netmask',intToIp(mask)],
+      ['Wildcard',intToIp(wildcard)],
+      ['Prefix','/'+prefix],
+      ['Host range',prefix<31?`${intToIp(net+1)} – ${intToIp(bcast-1)}`:'N/A'],
+      ['Usable hosts',hosts.toLocaleString()],
+      ['IP class',getClass(net)],
+    ];
+    out.innerHTML=`<div class="net-card">${rows.map(([k,v])=>`<div class="net-row"><span class="net-key">${k}</span><span class="net-val mono" data-copy="${esc(v)}" title="Click to copy">${esc(v)}</span></div>`).join('')}</div>`;
+    out.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>copyText(el.dataset.copy)));
+    // detail range
+    if(hosts<=256){
+      let html='<div class="label">All IPs in range</div><div class="subnet-grid">';
+      for(let i=net;i<=bcast;i++){
+        const label=i===net?'<span class="badge badge-neu" style="margin-left:4px;font-size:9px">NET</span>':(i===bcast?'<span class="badge badge-neu" style="margin-left:4px;font-size:9px">BCAST</span>':'');
+        html+=`<span class="chip" onclick="copyText('${intToIp(i)}')" style="justify-content:space-between">${intToIp(i)}${label}</span>`;
+      }
+      html+='</div>';
+      detail.innerHTML=html;
+    } else {
+      detail.innerHTML=`<div class="text-muted text-sm">Range too large (${hosts.toLocaleString()} hosts) — showing summary only.</div>`;
+    }
+  }catch(e){ out.innerHTML=`<span class="badge badge-bad">Parse error: ${esc(e.message)}</span>`; }
+}
+function ipToInt(ip){ return ip.split('.').reduce((a,b)=>(a<<8)|(parseInt(b)&0xFF),0)>>>0; }
+function intToIp(i){ return [(i>>>24)&0xFF,(i>>>16)&0xFF,(i>>>8)&0xFF,i&0xFF].join('.'); }
+function dotMaskToPrefix(mask){ return ipToInt(mask).toString(2).split('1').length-1; }
+function getClass(n){ if((n>>>24)<128) return 'A'; if((n>>>24)<192) return 'B'; if((n>>>24)<224) return 'C'; if((n>>>24)<240) return 'D (multicast)'; return 'E (reserved)'; }
+
+// Ping / reachability
+$('#pingBtn').addEventListener('click',async()=>{
+  const hosts=$('#pingInput').value.split(',').map(h=>h.trim()).filter(Boolean);
+  const out=$('#pingResults');
+  if(!hosts.length) return;
+  out.innerHTML='<div class="text-muted text-sm">Checking…</div>';
+  const results=[];
+  await Promise.all(hosts.map(async h=>{
+    const start=Date.now();
+    let ok=false, ms=0, status='';
+    try{
+      const url=h.startsWith('http')?h:`https://${h}`;
+      const ctrl=new AbortController(); const tid=setTimeout(()=>ctrl.abort(),5000);
+      const r=await fetch(url,{mode:'no-cors',signal:ctrl.signal});
+      clearTimeout(tid); ms=Date.now()-start; ok=true; status=`reachable`;
+    }catch(e){ ms=Date.now()-start; status=e.name==='AbortError'?'timeout':'unreachable / CORS'; }
+    results.push({h,ok,ms,status});
+  }));
+  out.innerHTML=`<div class="net-card">${results.map(r=>`<div class="ping-row"><div class="ping-dot" style="background:${r.ok?'var(--acc3)':'var(--acc5)'}"></div><span class="mono" style="flex:1">${esc(r.h)}</span><span class="badge ${r.ok?'badge-ok':'badge-bad'}">${r.status}</span><span class="mono text-xs text-muted" style="min-width:56px;text-align:right">${r.ms}ms</span></div>`).join('')}</div>`;
+});
+
+/* ============================================================
+   DNS LOOKUP (Cloudflare DoH)
+============================================================ */
+$('#dnsLookup').addEventListener('click', async()=>{
+  const host=$('#dnsHost').value.trim();
+  const type=$('#dnsType').value;
+  const out=$('#dnsResults');
+  if(!host) return;
+  out.innerHTML='<div class="text-muted text-sm">Resolving…</div>';
+  try{
+    const types = type==='ALL'?['A','AAAA','MX','TXT','NS','CNAME']:
+                  type==='PTR'?['PTR']:[type];
+    let html='';
+    for(const t of types){
+      let name=host;
+      if(t==='PTR' && /^\d+\.\d+\.\d+\.\d+$/.test(host)){
+        name=host.split('.').reverse().join('.')+'.in-addr.arpa';
+      }
+      const url=`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${t}`;
+      const r=await fetch(url,{headers:{'Accept':'application/dns-json'}});
+      const d=await r.json();
+      const ans=d.Answer||[];
+      html+=`<div class="text-xs text-muted bold mb-2 mt-3" style="text-transform:uppercase;letter-spacing:.6px">${t} Records</div>`;
+      if(!ans.length){ html+=`<div class="dns-record"><span class="dns-type">${t}</span><span class="dns-val text-muted">No records found</span></div>`; continue; }
+      ans.forEach(rec=>{
+        html+=`<div class="dns-record"><span class="dns-type">${t}</span><div><div class="dns-val" onclick="copyText('${esc(rec.data)}')" title="Click to copy">${esc(rec.data)}</div><div class="dns-ttl">TTL: ${rec.TTL}s</div></div></div>`;
+      });
+    }
+    out.innerHTML=html||'<div class="text-muted text-sm">No results</div>';
+  }catch(e){ out.innerHTML=`<span class="badge badge-bad">DNS error: ${esc(e.message)}</span>`; }
+});
+
+// GeoIP
+$('#geoBtn').addEventListener('click', async()=>{
+  const q=$('#geoInput').value.trim(); const out=$('#geoResults');
+  if(!q) return;
+  out.innerHTML='<div class="text-muted text-sm">Looking up…</div>';
+  try{
+    // Resolve hostname to IP first
+    let ip=q;
+    if(!/^\d+\.\d+\.\d+\.\d+$/.test(q)){
+      try{
+        const dnsR=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(q)}&type=A`,{headers:{'Accept':'application/dns-json'}});
+        const dnsD=await dnsR.json();
+        ip=(dnsD.Answer&&dnsD.Answer[0])?dnsD.Answer[0].data:q;
+      }catch{}
+    }
+    const r=await fetch(`https://ipapi.co/${ip}/json/`);
+    const d=await r.json();
+    const rows=[['IP',d.ip],['Hostname',d.hostname||'—'],['City',d.city],['Region',d.region],['Country',`${d.country_name} (${d.country_code})`],['Latitude',d.latitude],['Longitude',d.longitude],['Timezone',d.timezone],['ISP / Org',d.org],['ASN',d.asn]];
+    out.innerHTML=`<div class="net-card">${rows.map(([k,v])=>`<div class="net-row"><span class="net-key">${k}</span><span class="net-val mono" onclick="copyText('${esc(String(v))}')" title="Click to copy">${esc(String(v||'—'))}</span></div>`).join('')}</div>`;
+  }catch(e){ out.innerHTML=`<span class="badge badge-bad">Lookup failed: ${esc(e.message)}</span>`; }
+});
+
+/* ============================================================
+   PORTS REFERENCE
+============================================================ */
+const PORT_DATA=[
+  [20,'TCP','FTP-Data','File Transfer (data)'],[21,'TCP','FTP','File Transfer (control)'],
+  [22,'TCP','SSH','Secure Shell'],[23,'TCP','Telnet','Telnet (unencrypted)'],
+  [25,'TCP','SMTP','Email sending'],[53,'TCP/UDP','DNS','Domain Name System'],
+  [67,'UDP','DHCP','DHCP server'],[68,'UDP','DHCP','DHCP client'],
+  [69,'UDP','TFTP','Trivial File Transfer'],[80,'TCP','HTTP','Web traffic'],
+  [110,'TCP','POP3','Email retrieval'],[119,'TCP','NNTP','Usenet'],
+  [123,'UDP','NTP','Network Time Protocol'],[135,'TCP','RPC','MS RPC Endpoint Mapper'],
+  [137,'UDP','NetBIOS','NetBIOS Name Service'],[138,'UDP','NetBIOS','NetBIOS Datagram'],
+  [139,'TCP','NetBIOS','NetBIOS Session'],[143,'TCP','IMAP','Email retrieval (IMAP)'],
+  [161,'UDP','SNMP','Simple Network Management'],[162,'UDP','SNMPTRAP','SNMP Traps'],
+  [179,'TCP','BGP','Border Gateway Protocol'],[194,'TCP','IRC','Internet Relay Chat'],
+  [389,'TCP','LDAP','Lightweight Directory Access'],[443,'TCP','HTTPS','Secure web traffic'],
+  [445,'TCP','SMB','Windows File Sharing'],[465,'TCP','SMTPS','Secure SMTP'],
+  [500,'UDP','IKE','IPSec key exchange'],[514,'UDP','Syslog','System logging'],
+  [515,'TCP','LPD','Line Printer Daemon'],[587,'TCP','SMTP','Email submission'],
+  [631,'TCP','IPP','Internet Printing Protocol'],[636,'TCP','LDAPS','Secure LDAP'],
+  [993,'TCP','IMAPS','Secure IMAP'],[995,'TCP','POP3S','Secure POP3'],
+  [1080,'TCP','SOCKS','SOCKS Proxy'],[1194,'UDP','OpenVPN','OpenVPN'],
+  [1433,'TCP','MSSQL','Microsoft SQL Server'],[1521,'TCP','Oracle','Oracle Database'],
+  [1723,'TCP','PPTP','VPN PPTP'],[2049,'TCP','NFS','Network File System'],
+  [3306,'TCP','MySQL','MySQL Database'],[3389,'TCP','RDP','Remote Desktop Protocol'],
+  [4444,'TCP','Metasploit','Metasploit default (malware)'],[5060,'UDP','SIP','Session Initiation Protocol'],
+  [5353,'UDP','mDNS','Multicast DNS (Bonjour)'],[5432,'TCP','PostgreSQL','PostgreSQL Database'],
+  [5900,'TCP','VNC','Virtual Network Computing'],[6379,'TCP','Redis','Redis Database'],
+  [6881,'TCP','BitTorrent','BitTorrent'],[8080,'TCP','HTTP-Alt','HTTP Alternative'],
+  [8443,'TCP','HTTPS-Alt','HTTPS Alternative'],[8888,'TCP','HTTP-Dev','Dev web server'],
+  [9200,'TCP','Elasticsearch','Elasticsearch'],[9300,'TCP','Elasticsearch','Elasticsearch cluster'],
+  [27017,'TCP','MongoDB','MongoDB Database'],[27443,'TCP','WireGuard','WireGuard VPN'],
+];
+function renderPorts(filter=''){
+  const tbody=$('#portTableBody'); tbody.innerHTML='';
+  PORT_DATA.filter(([p,proto,svc,desc])=>{
+    if(!filter) return true;
+    const q=filter.toLowerCase();
+    return String(p).includes(q)||proto.toLowerCase().includes(q)||svc.toLowerCase().includes(q)||desc.toLowerCase().includes(q);
+  }).forEach(([p,proto,svc,desc])=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="mono" style="cursor:pointer;color:var(--acc)" onclick="copyText('${p}')">${p}</td><td><span class="badge badge-neu">${proto}</span></td><td class="bold">${esc(svc)}</td><td class="text-muted text-xs">${esc(desc)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+renderPorts();
+$('#portSearch').addEventListener('input',e=>renderPorts(e.target.value));
+
+// TCP command generator
+$('#tcpGenBtn').addEventListener('click',()=>{
+  const h=$('#tcpHost').value.trim();
+  const ports=$('#tcpPort').value.split(',').map(p=>p.trim()).filter(Boolean);
+  if(!h||!ports.length){ toast('Enter host and ports','warn'); return; }
+  const lines=[];
+  ports.forEach(p=>{
+    lines.push(`# Test ${h}:${p}`);
+    lines.push(`nc -zv -w3 ${h} ${p}`);
+    lines.push(`curl -s --max-time 3 telnet://${h}:${p}`);
+    lines.push(`Test-NetConnection -ComputerName ${h} -Port ${p}   # PowerShell`);
+    lines.push('');
+  });
+  const out=$('#tcpOut'); out.innerHTML='';
+  const pre=document.createElement('pre'); pre.className='sb-codeblock'; pre.style.fontSize='11px';
+  pre.innerText=lines.join('\n');
+  const btn=document.createElement('button'); btn.className='btn btn-sm sb-copy-btn'; btn.textContent='Copy';
+  btn.addEventListener('click',()=>copyText(pre.innerText));
+  pre.appendChild(btn); out.appendChild(pre);
+});
+
+// WOL
+$('#wolGen').addEventListener('click',()=>{
+  const mac=$('#wolMac').value.trim().replace(/[^0-9a-fA-F]/g,'');
+  if(mac.length!==12){ toast('Enter valid MAC','warn'); return; }
+  const fm=mac.match(/.{2}/g).join(':');
+  const hex='FF'.repeat(6) + mac.repeat(16);
+  const formatted=hex.match(/.{2}/g).join(' ');
+  const out=$('#wolOut');
+  out.innerHTML=`<div class="net-card mt-2">
+    <div class="net-row"><span class="net-key">MAC</span><span class="net-val mono" onclick="copyText('${fm}')" title="Click to copy">${fm}</span></div>
+    <div class="net-row"><span class="net-key">Magic packet (hex)</span><span class="net-val mono text-xs" style="word-break:break-all" onclick="copyText('${formatted}')" title="Click to copy">${formatted.slice(0,60)}…</span></div>
+    <div class="net-row"><span class="net-key">PowerShell command</span></div>
+    </div>
+    <pre class="sb-codeblock mt-2" style="font-size:11px">$mac = "${fm}"
+$target = "255.255.255.255"
+$port = 9
+$client = New-Object System.Net.Sockets.UdpClient
+$client.Connect($target, $port)
+$pkt = [byte[]](,0xFF * 102)
+$macBytes = $mac.Split(':') | ForEach-Object { [Convert]::ToByte($_, 16) }
+6..101 | ForEach-Object { $pkt[$_] = $macBytes[($_ - 6) % 6] }
+$client.Send($pkt, $pkt.Length) | Out-Null
+$client.Close()
+Write-Host "Magic packet sent to $mac"</pre>`;
+});
+
+/* ============================================================
+   ENCODE / HASH
+============================================================ */
+$$('[data-enc]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const input=$('#encInput').value;
+    const out=$('#encOutput');
+    try{
+      let result='';
+      const op=btn.dataset.enc;
+      if(op==='b64e') result=btoa(unescape(encodeURIComponent(input)));
+      else if(op==='b64d') result=decodeURIComponent(escape(atob(input)));
+      else if(op==='urle') result=encodeURIComponent(input);
+      else if(op==='urld') result=decodeURIComponent(input);
+      else if(op==='htmle') result=esc(input);
+      else if(op==='htmld'){ const t=document.createElement('textarea'); t.innerHTML=input; result=t.value; }
+      else if(op==='hex') result=Array.from(new TextEncoder().encode(input)).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+      else if(op==='hexd') result=new TextDecoder().decode(new Uint8Array(input.trim().replace(/\s+/g,'').match(/.{2}/g).map(b=>parseInt(b,16))));
+      else if(op==='bin') result=Array.from(new TextEncoder().encode(input)).map(b=>b.toString(2).padStart(8,'0')).join(' ');
+      else if(op==='bind') result=new TextDecoder().decode(new Uint8Array(input.trim().split(/\s+/).map(b=>parseInt(b,2))));
+      else if(op==='rot13') result=input.replace(/[a-zA-Z]/g,c=>String.fromCharCode((c<='Z'?90:122)-(((c<='Z'?90:122)-c.charCodeAt(0)+13)%26)));
+      else if(op==='rev') result=input.split('').reverse().join('');
+      else if(op==='jwtd'){
+        const parts=input.split('.');
+        if(parts.length<2) throw new Error('Not a JWT');
+        const header=JSON.parse(atob(parts[0].replace(/-/g,'+').replace(/_/g,'/')));
+        const payload=JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        result=JSON.stringify({header,payload},null,2);
+      }
+      out.textContent=result;
+    }catch(e){ out.textContent='Error: '+e.message; }
+  });
+});
+$('#encOutput').addEventListener('click',()=>{ const t=$('#encOutput').textContent; if(t&&t!=='—') copyText(t); });
+
+// Hashing (SubtleCrypto)
+async function hashAll(text){
+  const enc=new TextEncoder();
+  const data=enc.encode(text);
+  const algos=[['MD5 (JS)','md5-approx'],['SHA-1','SHA-1'],['SHA-256','SHA-256'],['SHA-384','SHA-384'],['SHA-512','SHA-512']];
+  const out=$('#hashResults'); out.innerHTML='';
+  for(const [name,algo] of algos){
+    let hex='';
+    if(algo==='md5-approx'){
+      hex='[MD5 requires a library — use sha-256+]';
+    } else {
+      const buf=await crypto.subtle.digest(algo,data);
+      hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+    const row=document.createElement('div'); row.className='hash-row';
+    row.innerHTML=`<span class="hash-alg">${name}</span><span class="hash-val" onclick="copyText('${hex}')" title="Click to copy">${hex}</span><button class="btn btn-sm" onclick="copyText('${hex}')">Copy</button>`;
+    out.appendChild(row);
+  }
+}
+$('#hashBtn').addEventListener('click',()=>{ const t=$('#hashInput').value; if(!t) return; hashAll(t); });
+$('#hashCompare').addEventListener('click',()=>{
+  const a=$('#hashA').value.trim().toLowerCase();
+  const b=$('#hashB').value.trim().toLowerCase();
+  const out=$('#hashCompResult');
+  if(!a||!b){ out.innerHTML=''; return; }
+  if(a===b) out.innerHTML='<span class="badge badge-ok">✓ Hashes match</span>';
+  else out.innerHTML='<span class="badge badge-bad">✗ Hashes do NOT match</span>';
+});
+
+// JSON formatter
+function tryJSON(txt){
+  try{ return JSON.parse(txt); }catch(e){ return {error:e.message}; }
+}
+$('#jsonFormat').addEventListener('click',()=>{
+  const i=$('#jsonInput').value; const o=$('#jsonOutput'); const s=$('#jsonStatus');
+  try{ o.textContent=JSON.stringify(JSON.parse(i),null,2); s.innerHTML='<span class="badge badge-ok">Valid JSON</span>'; }
+  catch(e){ s.innerHTML=`<span class="badge badge-bad">Parse error: ${esc(e.message)}</span>`; }
+});
+$('#jsonMinify').addEventListener('click',()=>{
+  try{ $('#jsonOutput').textContent=JSON.stringify(JSON.parse($('#jsonInput').value)); }
+  catch(e){ $('#jsonStatus').innerHTML=`<span class="badge badge-bad">${esc(e.message)}</span>`; }
+});
+$('#jsonValidate').addEventListener('click',()=>{
+  try{ JSON.parse($('#jsonInput').value); $('#jsonStatus').innerHTML='<span class="badge badge-ok">Valid JSON ✓</span>'; }
+  catch(e){ $('#jsonStatus').innerHTML=`<span class="badge badge-bad">Invalid: ${esc(e.message)}</span>`; }
+});
+$('#jsonOutput').addEventListener('click',()=>{ const t=$('#jsonOutput').textContent; if(t&&t!=='—') copyText(t); });
+
+/* ============================================================
+   REGEX TESTER
+============================================================ */
+$$('[data-rx]').forEach(btn=>{ btn.addEventListener('click',()=>{ $('#rxPattern').value=btn.dataset.rx; runRegex(); }); });
+$('#rxPattern').addEventListener('input',runRegex);
+$('#rxFlags').addEventListener('input',runRegex);
+$('#rxTestStr').addEventListener('input',runRegex);
+function runRegex(){
+  const pat=$('#rxPattern').value; const flags=$('#rxFlags').value||'g'; const testStr=$('#rxTestStr').value;
+  const hi=$('#rxHighlight'); const ml=$('#rxMatches'); const st=$('#rxStatus');
+  if(!pat){ hi.textContent=testStr; ml.textContent='—'; st.innerHTML=''; return; }
+  try{
+    const re=new RegExp(pat,flags.includes('g')?flags:flags+'g');
+    const matches=[...testStr.matchAll(new RegExp(pat,flags.includes('g')?flags:flags+'g'))];
+    st.innerHTML=`<span class="badge badge-ok">${matches.length} match${matches.length!==1?'es':''}</span>`;
+    ml.textContent=matches.length?matches.map((m,i)=>`[${i}] "${m[0]}" at index ${m.index}${m.length>1?' groups: '+JSON.stringify([...m].slice(1)):''}`).join('\n'):'No matches';
+    // Highlight
+    let html=''; let last=0;
+    const re2=new RegExp(pat,flags.includes('g')?flags:flags+'g');
+    let m2;
+    while((m2=re2.exec(testStr))!==null){
+      html+=esc(testStr.slice(last,m2.index));
+      html+=`<mark class="regex-match">${esc(m2[0])}</mark>`;
+      last=m2.index+m2[0].length;
+      if(m2[0].length===0) re2.lastIndex++;
+    }
+    html+=esc(testStr.slice(last));
+    hi.innerHTML=html;
+  }catch(e){ st.innerHTML=`<span class="badge badge-bad">Regex error: ${esc(e.message)}</span>`; hi.textContent=testStr; ml.textContent='—'; }
+}
+$('#rxReplaceBtn').addEventListener('click',()=>{
+  const pat=$('#rxPattern').value; const flags=$('#rxFlags').value||'g'; const testStr=$('#rxTestStr').value; const rep=$('#rxReplace').value;
+  try{ const re=new RegExp(pat,flags.includes('g')?flags:flags+'g'); $('#rxReplaceOut').textContent=testStr.replace(re,rep); }
+  catch(e){ $('#rxReplaceOut').textContent='Error: '+e.message; }
+});
+
+/* ============================================================
+   COLOR TOOLS
+============================================================ */
+function hexToRgb(hex){ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join(''); const n=parseInt(hex,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function rgbToHsl(r,g,b){ r/=255;g/=255;b/=255; const max=Math.max(r,g,b),min=Math.min(r,g,b); let h,s,l=(max+min)/2; if(max===min){ h=s=0; }else{ const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min); switch(max){ case r: h=(g-b)/d+(g<b?6:0); break; case g: h=(b-r)/d+2; break; case b: h=(r-g)/d+4; break; } h/=6; } return [Math.round(h*360),Math.round(s*100),Math.round(l*100)]; }
+function hslToRgb(h,s,l){ h/=360;s/=100;l/=100; let r,g,b; if(s===0){ r=g=b=l; }else{ const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q; const hue2rgb=(p,q,t)=>{ if(t<0) t+=1; if(t>1) t-=1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; }; r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3); } return [Math.round(r*255),Math.round(g*255),Math.round(b*255)]; }
+function parseColor(str){ str=str.trim(); if(str.startsWith('#')){ try{ const [r,g,b]=hexToRgb(str); return {r,g,b,hex:rgbToHex(r,g,b)}; }catch{} } const rgb=str.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i); if(rgb){ const r=+rgb[1],g=+rgb[2],b=+rgb[3]; return {r,g,b,hex:rgbToHex(r,g,b)}; } const hsl=str.match(/hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i); if(hsl){ const [r,g,b]=hslToRgb(+hsl[1],+hsl[2],+hsl[3]); return {r,g,b,hex:rgbToHex(r,g,b)}; } return null; }
+function contrastRatio(l1,l2){ const a=Math.max(l1,l2),b=Math.min(l1,l2); return (a+0.05)/(b+0.05); }
+function relativeLuminance(r,g,b){ const lin=v=>{ const s=v/255; return s<=0.04045?s/12.92:Math.pow((s+0.055)/1.055,2.4); }; return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b); }
+
+$('#colorPicker').addEventListener('input',e=>{ $('#colorInput').value=e.target.value; convertColor(e.target.value); });
+$('#colorInput').addEventListener('input',e=>{ convertColor(e.target.value); });
+function convertColor(str){
+  const c=parseColor(str); const out=$('#colorConvResults');
+  if(!c){ out.innerHTML='<div class="text-muted text-sm">Enter a valid color…</div>'; return; }
+  const [h,s,l]=rgbToHsl(c.r,c.g,c.b);
+  const lum=relativeLuminance(c.r,c.g,c.b);
+  try{ $('#colorPicker').value=c.hex; }catch{}
+  const rows=[
+    ['HEX',c.hex],
+    ['RGB',`rgb(${c.r}, ${c.g}, ${c.b})`],
+    ['RGBA',`rgba(${c.r}, ${c.g}, ${c.b}, 1)`],
+    ['HSL',`hsl(${h}, ${s}%, ${l}%)`],
+    ['Luminance',lum.toFixed(4)],
+    ['Tailwind approx','—'],
+  ];
+  out.innerHTML=`<div style="height:40px;border-radius:var(--r);background:${c.hex};border:1px solid var(--border);margin-bottom:8px"></div><div class="net-card">${rows.map(([k,v])=>`<div class="net-row"><span class="net-key">${k}</span><span class="net-val mono" onclick="copyText('${esc(v)}')" title="Click to copy">${esc(v)}</span></div>`).join('')}</div>`;
+}
+
+$('#paletteGen').addEventListener('click',()=>{
+  const base=$('#paletteBase').value.trim(); const type=$('#paletteType').value;
+  const c=parseColor(base); const out=$('#paletteOut');
+  if(!c){ toast('Invalid color','warn'); return; }
+  out.innerHTML='';
+  const [h,s,l]=rgbToHsl(c.r,c.g,c.b);
+  let colors=[];
+  if(type==='shades'){
+    for(let i=0;i<=10;i++){ const nl=i*10; const [r,g,b]=hslToRgb(h,s,nl); colors.push(rgbToHex(r,g,b)); }
+  } else if(type==='comp'){
+    colors=[c.hex, rgbToHex(...hslToRgb((h+180)%360,s,l))];
+  } else if(type==='tri'){
+    colors=[c.hex, rgbToHex(...hslToRgb((h+120)%360,s,l)), rgbToHex(...hslToRgb((h+240)%360,s,l))];
+  } else if(type==='tetra'){
+    colors=[0,90,180,270].map(d=>rgbToHex(...hslToRgb((h+d)%360,s,l)));
+  } else if(type==='analog'){
+    colors=[-30,-15,0,15,30].map(d=>rgbToHex(...hslToRgb((h+d+360)%360,s,l)));
+  }
+  colors.forEach(hex=>{
+    const div=document.createElement('div'); div.className='cg-item';
+    div.style.background=hex; div.title=hex;
+    const lum=relativeLuminance(...hexToRgb(hex));
+    div.style.color=lum>0.4?'#000':'#fff';
+    div.textContent=hex; div.onclick=()=>copyText(hex);
+    out.appendChild(div);
+  });
+  $('#paletteCopy').style.display='inline-flex';
+  $('#paletteCopy').onclick=()=>copyText(':root {\n'+colors.map((c,i)=>`  --color-${i}: ${c};`).join('\n')+'\n}');
+});
+
+$('#wcagCheck').addEventListener('click',()=>{
+  const fg=$('#wcagFg').value.trim(); const bg=$('#wcagBg').value.trim();
+  const cf=parseColor(fg); const cb=parseColor(bg);
+  const prev=$('#wcagPreview'); const res=$('#wcagResults');
+  if(!cf||!cb){ toast('Enter valid colors','warn'); return; }
+  prev.style.color=cf.hex; prev.style.background=cb.hex;
+  const lf=relativeLuminance(cf.r,cf.g,cf.b); const lb=relativeLuminance(cb.r,cb.g,cb.b);
+  const ratio=contrastRatio(lf,lb);
+  const aa=(ratio>=4.5); const aaa=(ratio>=7); const aaLarge=(ratio>=3);
+  res.innerHTML=`
+    <div class="flex gap-2 items-center mb-2"><span class="bold text-lg mono" style="font-size:22px">${ratio.toFixed(2)}:1</span><span class="text-muted text-sm">contrast ratio</span></div>
+    <div class="flex gap-2" style="flex-wrap:wrap">
+      <span class="badge ${aa?'badge-ok':'badge-bad'}">AA Normal ${aa?'✓':'✗'}</span>
+      <span class="badge ${aaa?'badge-ok':'badge-bad'}">AAA Normal ${aaa?'✓':'✗'}</span>
+      <span class="badge ${aaLarge?'badge-ok':'badge-bad'}">AA Large ${aaLarge?'✓':'✗'}</span>
+    </div>`;
+});
+
+/* ============================================================
+   CHECKLISTS
+============================================================ */
+let checklists=JSON.parse(localStorage.getItem('itq2_checklists')||'{}');
+function saveChecklists(){ localStorage.setItem('itq2_checklists',JSON.stringify(checklists)); }
+function renderChecklists(){
+  const con=$('#checklistContainer'); con.innerHTML='';
+  Object.values(checklists).forEach(cl=>{
+    const div=document.createElement('div'); div.style.marginBottom='14px';
+    const done=cl.items.filter(i=>i.done).length;
+    div.innerHTML=`<div class="flex items-center justify-between mb-2">
+      <input class="cl-title" value="${esc(cl.title)}" style="background:transparent;border:none;font-size:14px;font-weight:700;color:var(--text);padding:0;width:auto" data-id="${cl.id}"/>
+      <div class="flex gap-2 items-center"><span class="badge badge-neu">${done}/${cl.items.length}</span><button class="btn btn-sm btn-ghost" data-del="${cl.id}">✕</button></div></div>
+      <div class="progress-bar mb-2"><div class="progress-fill" style="width:${cl.items.length?done/cl.items.length*100:0}%;background:var(--acc3)"></div></div>
+      <ul class="checklist" id="cli-${cl.id}"></ul>
+      <div class="flex gap-2 mt-2"><input class="cli-new" placeholder="Add item…" data-list="${cl.id}" style="flex:1"/><button class="btn btn-sm" data-add="${cl.id}">Add</button></div>`;
+    con.appendChild(div);
+    const ul=div.querySelector(`#cli-${cl.id}`);
+    cl.items.forEach((item,idx)=>{
+      const li=document.createElement('li');
+      li.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><span class="${item.done?'item-done':''}">${esc(item.text)}</span><button class="s-btn btn-ghost" style="margin-left:auto" data-ritem="${idx}">✕</button>`;
+      li.querySelector('input').addEventListener('change',e=>{
+        item.done=e.target.checked; li.querySelector('span').className=item.done?'item-done':'';
+        saveChecklists(); renderChecklists();
+      });
+      li.querySelector('[data-ritem]').addEventListener('click',()=>{ cl.items.splice(idx,1); saveChecklists(); renderChecklists(); });
+      ul.appendChild(li);
+    });
+    div.querySelector('[data-del]').addEventListener('click',e=>{ delete checklists[e.target.dataset.del]; saveChecklists(); renderChecklists(); });
+    div.querySelector('.cl-title').addEventListener('change',e=>{ checklists[cl.id].title=e.target.value; saveChecklists(); });
+    const ni=div.querySelector('.cli-new');
+    const addFn=()=>{ const t=ni.value.trim(); if(!t) return; cl.items.push({text:t,done:false}); ni.value=''; saveChecklists(); renderChecklists(); };
+    div.querySelector(`[data-add="${cl.id}"]`).addEventListener('click',addFn);
+    ni.addEventListener('keydown',e=>{ if(e.key==='Enter') addFn(); });
+  });
+}
+$('#newChecklist').addEventListener('click',()=>{
+  const id=crypto.randomUUID();
+  checklists[id]={id,title:'New Checklist',items:[],created:Date.now()};
+  saveChecklists(); renderChecklists();
+});
+$('#clearChecklists').addEventListener('click',()=>{ if(confirm('Clear all checklists?')){ checklists={}; saveChecklists(); renderChecklists(); }});
+renderChecklists();
+
+const PRESETS={
+  'new-pc':{ title:'New PC Setup', items:['Install Windows updates','Join domain','Install antivirus / EDR','Configure BitLocker','Install standard software bundle','Enable firewall','Test network connectivity','Add user account','Enroll MFA','Label asset and add to CMDB','Send handover email'] },
+  'network-issue':{ title:'Network Troubleshoot', items:['Check physical cable / WiFi signal','Verify IP address (ipconfig/ifconfig)','Ping default gateway','Ping 8.8.8.8 (internet)','Check DNS (nslookup google.com)','Test with alternate DNS','Check DHCP lease','Review firewall / proxy settings','Check switch port status','Review VLAN assignments','Escalate to ISP if needed'] },
+  'security-audit':{ title:'Security Audit Checklist', items:['Verify patch levels (OS & apps)','Review user accounts — remove stale','Confirm MFA enabled for all admins','Check for open unnecessary ports','Review firewall rules','Audit privileged account list','Check backup completion logs','Review login failure logs','Verify AV signatures up to date','Check SSL/TLS certificate expiry','Review cloud storage permissions','Test restore from backup'] },
+  'server-deploy':{ title:'Server Deployment', items:['Order / provision hardware or VM','Install OS and apply all patches','Configure network (static IP, DNS)','Join domain','Enable remote management (RDP/SSH)','Configure monitoring agent','Configure backup','Install required software','Open required firewall ports','Document in CMDB','Send acceptance test to requestor','Sign off'] },
+  'offboarding':{ title:'User Offboarding', items:['Disable AD account immediately','Revoke VPN access','Forward email / set OOO','Remove from distribution lists','Transfer file ownership','Revoke MFA tokens','Recover hardware (laptop, phone, badge)','Notify payroll','Remove from cloud apps (M365, AWS…)','Archive mailbox','Document completion date'] },
+};
+$$('[data-preset]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const p=PRESETS[btn.dataset.preset]; if(!p) return;
+    const out=$('#presetOut'); out.innerHTML='';
+    const div=document.createElement('div'); div.style.marginBottom='6px';
+    div.innerHTML=`<div class="flex items-center justify-between mb-2"><strong>${esc(p.title)}</strong><button class="btn btn-sm" id="importPreset">Import as checklist</button></div><ul class="checklist" id="presetList"></ul>`;
+    out.appendChild(div);
+    const ul=$('#presetList'); let checked=[];
+    p.items.forEach((item,i)=>{
+      const li=document.createElement('li');
+      li.innerHTML=`<input type="checkbox" id="pi${i}"><label for="pi${i}">${esc(item)}</label>`;
+      li.querySelector('input').addEventListener('change',e=>{ if(e.target.checked) checked.push(item); else checked=checked.filter(x=>x!==item); });
+      ul.appendChild(li);
+    });
+    div.querySelector('#importPreset').addEventListener('click',()=>{
+      const id=crypto.randomUUID();
+      checklists[id]={id,title:p.title,items:p.items.map(t=>({text:t,done:false})),created:Date.now()};
+      saveChecklists(); renderChecklists();
+      $$('.tab-btn').find(b=>b.dataset.tab==='checklist')?.click();
+      toast('Imported: '+p.title);
+    });
+  });
+});
+
+/* ============================================================
+   TIMERS
+============================================================ */
+// Stopwatch
+let swRunning=false, swStart=0, swElapsed=0, swTimer=null, swLaps=[];
+function swFmt(ms){ const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); const s=Math.floor((ms%60000)/1000); const t=Math.floor((ms%1000)/100); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${t}`; }
+function swTick(){ const now=Date.now(); const total=swElapsed+(now-swStart); $('#swDisplay').textContent=swFmt(total); }
+$('#swStart').addEventListener('click',()=>{
+  if(!swRunning){ swRunning=true; swStart=Date.now(); swTimer=setInterval(swTick,100); $('#swStart').textContent='Pause'; }
+  else { swRunning=false; swElapsed+=Date.now()-swStart; clearInterval(swTimer); $('#swStart').textContent='Start'; }
+});
+$('#swLap').addEventListener('click',()=>{
+  if(!swRunning) return;
+  const total=swElapsed+(Date.now()-swStart);
+  swLaps.push(total);
+  const li=document.createElement('div'); li.className='text-xs mono text-muted'; li.style.padding='3px 0'; li.style.borderBottom='1px solid var(--border)';
+  li.textContent=`#${swLaps.length}  ${swFmt(total)}  (+${swFmt(total-(swLaps[swLaps.length-2]||0))})`;
+  $('#swLaps').prepend(li);
+});
+$('#swReset').addEventListener('click',()=>{ clearInterval(swTimer); swRunning=false; swElapsed=0; swLaps=[]; $('#swDisplay').textContent='00:00:00.0'; $('#swStart').textContent='Start'; $('#swLaps').innerHTML=''; });
+
+// Countdown
+let cdRunning=false, cdRemaining=300000, cdTimer=null;
+function cdFmt(ms){ const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); const s=Math.floor((ms%60000)/1000); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function cdFromInputs(){ return (+($('#cdHH').value||0)*3600 + +($('#cdMM').value||0)*60 + +($('#cdSS').value||0))*1000; }
+$('#cdDisplay').textContent=cdFmt(cdFromInputs());
+$('#cdHH').addEventListener('change',()=>{ if(!cdRunning){ cdRemaining=cdFromInputs(); $('#cdDisplay').textContent=cdFmt(cdRemaining); }});
+$('#cdMM').addEventListener('change',()=>{ if(!cdRunning){ cdRemaining=cdFromInputs(); $('#cdDisplay').textContent=cdFmt(cdRemaining); }});
+$('#cdSS').addEventListener('change',()=>{ if(!cdRunning){ cdRemaining=cdFromInputs(); $('#cdDisplay').textContent=cdFmt(cdRemaining); }});
+$('#cdStart').addEventListener('click',()=>{
+  if(!cdRunning){
+    if(cdRemaining<=0) cdRemaining=cdFromInputs();
+    if(cdRemaining<=0) return;
+    cdRunning=true; $('#cdStart').textContent='Pause';
+    let last=Date.now();
+    cdTimer=setInterval(()=>{
+      const now=Date.now(); cdRemaining-=(now-last); last=now;
+      if(cdRemaining<=0){ cdRemaining=0; clearInterval(cdTimer); cdRunning=false; $('#cdStart').textContent='Start'; toast('⏳ Countdown finished!','info',4000); }
+      const d=$('#cdDisplay'); d.textContent=cdFmt(cdRemaining);
+      d.className='timer-display'+(cdRemaining<60000?' bad':cdRemaining<300000?' warn':'');
+    },200);
+  } else { clearInterval(cdTimer); cdRunning=false; $('#cdStart').textContent='Start'; }
+});
+$('#cdReset').addEventListener('click',()=>{ clearInterval(cdTimer); cdRunning=false; cdRemaining=cdFromInputs(); $('#cdDisplay').textContent=cdFmt(cdRemaining); $('#cdDisplay').className='timer-display'; $('#cdStart').textContent='Start'; });
+
+// Timezone converter
+const TZ_ZONES=[
+  {label:'UTC',tz:'UTC'},
+  {label:'London',tz:'Europe/London'},
+  {label:'Paris / Berlin',tz:'Europe/Paris'},
+  {label:'Reykjavik',tz:'Atlantic/Reykjavik'},
+  {label:'New York',tz:'America/New_York'},
+  {label:'Chicago',tz:'America/Chicago'},
+  {label:'Denver',tz:'America/Denver'},
+  {label:'Los Angeles',tz:'America/Los_Angeles'},
+  {label:'Sao Paulo',tz:'America/Sao_Paulo'},
+  {label:'Moscow',tz:'Europe/Moscow'},
+  {label:'Dubai',tz:'Asia/Dubai'},
+  {label:'Mumbai',tz:'Asia/Kolkata'},
+  {label:'Singapore',tz:'Asia/Singapore'},
+  {label:'Tokyo',tz:'Asia/Tokyo'},
+  {label:'Sydney',tz:'Australia/Sydney'},
+];
+function renderTz(dateStr){
+  const d=dateStr?new Date(dateStr):new Date();
+  const out=$('#tzResults'); out.innerHTML='';
+  TZ_ZONES.forEach(({label,tz})=>{
+    try{
+      const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:tz,dateStyle:'short',timeStyle:'short'}).format(d);
+      const row=document.createElement('div'); row.className='net-row';
+      row.innerHTML=`<span class="net-key">${esc(label)}</span><span class="net-val mono">${fmt}</span>`;
+      out.appendChild(row);
+    }catch{}
+  });
+}
+$('#tzInput').addEventListener('change',e=>renderTz(e.target.value));
+$('#tzNow').addEventListener('click',()=>{
+  const d=new Date(); const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  $('#tzInput').value=local; renderTz();
+});
+renderTz(); // initial with current time
+
+</script>
+</body>
+</html>
